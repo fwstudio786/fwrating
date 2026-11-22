@@ -160,6 +160,24 @@ tr:last-child td { border-bottom: 0; }
 @media (max-width: 720px) { .misform { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .misform input:first-child { grid-column: 1 / -1; } }
 .mfoot { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: 14px; }
 .mfoot .left { margin-right: auto; }
+.pw { position: relative; } .pw input { padding-right: 86px; }
+.pwbtn { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 9px; border: 0; border-radius: 7px; background: var(--panel-3); color: var(--muted); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.pwbtn:hover, .pwbtn[aria-pressed="true"] { color: var(--fg); }
+.help { width: 32px; padding: 0; font-weight: 800; }
+.tour { position: fixed; inset: 0; z-index: 90; }
+.tour.center { background: rgb(0 0 0 / .62); }
+.tour-ring { position: fixed; border-radius: 12px; box-shadow: 0 0 0 3px var(--acc), 0 0 0 9999px rgb(0 0 0 / .62); transition: all .25s ease; pointer-events: none; }
+.tour-card { position: fixed; width: min(380px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line-2); border-radius: 14px; padding: 18px; box-shadow: 0 24px 60px rgb(0 0 0 / .55); display: grid; gap: 12px; }
+.tour-card .num { font: 600 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--acc); }
+.tour-card h2 { margin: 6px 0 6px; font: 800 20px/1.2 var(--display); }
+.tour-card p { margin: 0; color: var(--muted); font-size: 14px; }
+.tour-card p b { color: var(--fg); }
+.tour-ui { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.tour-ui span { font-size: 12px; font-weight: 600; padding: 5px 8px; border-radius: 7px; background: var(--panel-3); border: 1px solid var(--line-2); }
+.tour-ui span.a { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); } .tour-ui span.m { color: var(--mis); } .tour-ui span.c { color: var(--cli); }
+.tour-foot { display: flex; align-items: center; gap: 8px; }
+.dots { display: flex; gap: 5px; margin-right: auto; } .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); } .dots i.on { background: var(--acc); }
+@media (prefers-reduced-motion: reduce) { .tour-ring { transition: none; } }
 .toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; background: var(--fg); color: var(--bg); font-weight: 600; padding: 10px 16px; border-radius: 10px; transition: .2s; z-index: 80; pointer-events: none; max-width: calc(100vw - 32px); }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 .how { font-size: 13px; color: var(--muted); line-height: 1.65; }
@@ -175,7 +193,7 @@ tr:last-child td { border-bottom: 0; }
 <header class="top"><div class="wrap">
   <a class="logo" href="#" id="logo" aria-label="EditScore home"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#ff5a1f"/><rect x="6" y="9" width="11" height="5" rx="1.5" fill="#fff"/><rect x="11" y="18" width="15" height="5" rx="1.5" fill="#fff" opacity=".6"/><path d="M19 8.5l2.4 2.4L26 6.3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="appName">EditScore</span></a>
   <nav class="nav" id="nav" hidden aria-label="Sections"><button type="button" data-v="dash" aria-current="page">Dashboard</button><button type="button" data-v="tasks">Tasks</button><button type="button" data-v="clients">Clients</button></nav>
-  <div class="me" id="meBox" hidden><span class="av" id="meAv"></span><span class="nm" id="meName"></span><button class="btn sm" id="newTop" type="button">+ Task</button><button class="btn sm ghost" id="acctBtn" type="button">Account</button><button class="btn sm ghost" id="outBtn" type="button">Sign out</button></div>
+  <div class="me" id="meBox" hidden><span class="av" id="meAv"></span><span class="nm" id="meName"></span><button class="btn sm" id="newTop" type="button">+ Task</button><button class="btn sm ghost help" id="helpBtn" type="button" aria-label="How EditScore works" title="How it works">?</button><button class="btn sm ghost" id="acctBtn" type="button">Account</button><button class="btn sm ghost" id="outBtn" type="button">Sign out</button></div>
   <div class="me" id="guestBox"><button class="btn sm ghost" id="signInTop" type="button">Sign in</button><button class="btn sm acc" id="signUpTop" type="button">Create account</button></div>
 </div></header>
 
@@ -222,7 +240,7 @@ tr:last-child td { border-bottom: 0; }
       <div class="or">or with email</div>
       <form id="inForm" style="display:grid;gap:10px">
         <input id="inEm" type="email" autocomplete="email" placeholder="Email" required aria-label="Email">
-        <input id="inPw" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
+        <div class="pw"><input id="inPw" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password"><button type="button" class="pwbtn" data-pw="inPw" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Show</span></button></div>
         <button class="btn acc" type="submit">Sign in</button>
         <button class="linkbtn" id="forgot" type="button">Forgot password?</button>
       </form>
@@ -230,7 +248,7 @@ tr:last-child td { border-bottom: 0; }
     <form id="paneUp" hidden style="display:grid;gap:10px">
       <input id="upName" autocomplete="name" placeholder="Your name" required maxlength="60" aria-label="Your name">
       <input id="upEm" type="email" autocomplete="email" placeholder="Your email" required aria-label="Email">
-      <input id="upPw" type="password" autocomplete="new-password" placeholder="Make a password (8+ characters)" required minlength="8" aria-label="New password">
+      <div class="pw"><input id="upPw" type="password" autocomplete="new-password" placeholder="Make a password (8+ characters)" required minlength="8" aria-label="New password"><button type="button" class="pwbtn" data-pw="upPw" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Show</span></button></div>
       <button class="btn acc" type="submit">Create account</button>
       <small class="muted">We'll email you a link to confirm your address. Google accounts don't need this step.</small>
     </form>
@@ -257,6 +275,14 @@ tr:last-child td { border-bottom: 0; }
     <small class="muted">The goal line shows on your rating chart, and the dashboard tells you if you're above or below it.</small>
     <div class="mfoot"><button class="btn ghost" data-close type="button">Cancel</button><button class="btn acc" type="submit">Save</button></div>
   </form>
+</div>
+<!-- first-time guide -->
+<div class="tour" id="tour" hidden>
+  <div class="tour-ring" id="tRing" aria-hidden="true"></div>
+  <div class="tour-card" id="tCard" role="dialog" aria-modal="true" aria-labelledby="tTitle">
+    <div id="tStep"></div>
+    <div class="tour-foot"><div class="dots" id="tDots" aria-hidden="true"></div><button class="btn sm ghost" id="tSkip" type="button">Skip</button><button class="btn sm" id="tBack" type="button">Back</button><button class="btn sm acc" id="tNext" type="button">Next</button></div>
+  </div>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -666,6 +692,59 @@ $("#vOther").addEventListener("click", async () => { await auth.signOut(); pane(
 $("#forgot").addEventListener("click", async () => { const em = $("#inEm").value.trim(); if (!em) { $("#aErr").textContent = "Type your email above first."; $("#inEm").focus(); return; } try { await auth.sendPasswordResetEmail(em); } catch (e) {} $("#aErr").textContent = ""; $("#aOk").textContent = "If that email has an account, a reset link is on its way."; });
 $("#outBtn").addEventListener("click", async () => { if (demo) { exitDemo(); return; } await auth.signOut(); });
 
+/* ---------- show / hide password ---------- */
+$$("[data-pw]").forEach((b) => b.addEventListener("click", () => {
+  const i = document.getElementById(b.dataset.pw), show = i.type === "password";
+  i.type = show ? "text" : "password"; b.setAttribute("aria-pressed", String(show)); b.setAttribute("aria-label", show ? "Hide password" : "Show password");
+  b.querySelector("span").textContent = show ? "Hide" : "Show"; i.focus();
+}));
+
+/* ---------- first-time guide: highlights the real buttons ---------- */
+const chips = (...a) => `<div class="tour-ui" aria-hidden="true">${a.map(([t, k]) => `<span class="${k || ""}">${t}</span>`).join("")}</div>`;
+const TOUR = [
+  { t: "Welcome to EditScore", d: "This is your private place to track how you're doing as an editor: your tasks, the revisions clients ask for, and your mistakes. Here's a quick tour of where everything is." },
+  { el: "#newTop", t: "1. Add every video you edit", d: "Click <b>+ Task</b> for each job. Add the client, the type, the date it was given to you, the due date, and the date you delivered it. That's how your on-time rate and turnaround are worked out." },
+  { t: "2. Log revisions and mistakes", d: "Inside a task, tap <b>+ Client revision</b> or <b>+ Internal revision</b> each time changes are asked for. Under <b>Mistakes</b>, write what went wrong, pick a category, and add the time in the video if you know it.", ui: chips(["+ Client revision"], ["+ Internal revision"], ["Text & captions", "m"], ["0:12"], ["Add", "a"]) },
+  { el: '#nav [data-v="tasks"]', t: "3. All your tasks", d: "<b>Tasks</b> lists everything you've logged. Search by name, client or mistake, filter by status, and export to a spreadsheet. Late deliveries show in red." },
+  { el: '#nav [data-v="dash"]', t: "4. Your rating and progress", d: "The <b>Dashboard</b> gives you a rating out of 5 for each month, tells you if you're getting better than last month, and shows graphs of your mistakes and revisions, plus your most common mistakes." },
+  { el: '#nav [data-v="clients"]', t: "5. Your clients", d: "<b>Clients</b> shows which clients ask for the most changes, and how you do with each one." },
+  { el: "#acctBtn", t: "6. Set your goal", d: "In <b>Account</b>, change your name and pick a goal rating. Your goal shows as a line on the rating graph." },
+  { el: "#helpBtn", t: "Need this again?", d: "Click <b>?</b> any time to replay this tour." },
+];
+let ti = 0, tSteps = [];
+const visible = (el) => !!el && el.getClientRects().length > 0 && el.offsetWidth > 0;
+function openTour() {
+  if (!me) return; tSteps = TOUR.filter((x) => !x.el || visible($(x.el))); ti = 0;
+  $("#tour").hidden = false; drawTour(); setTimeout(() => $("#tNext").focus(), 0);
+}
+function closeTour() { $("#tour").hidden = true; try { localStorage.setItem("es-tour-" + me.uid, "1"); } catch (e) {} }
+function drawTour() {
+  const s = tSteps[ti], last = ti === tSteps.length - 1;
+  $("#tStep").innerHTML = `<div class="num">Step ${ti + 1} of ${tSteps.length}</div><h2 id="tTitle">${s.t}</h2><p>${s.d}</p>${s.ui || ""}`;
+  $("#tDots").innerHTML = tSteps.map((_, i) => `<i class="${i === ti ? "on" : ""}"></i>`).join("");
+  $("#tBack").hidden = ti === 0; $("#tSkip").hidden = last; $("#tNext").textContent = last ? "Got it" : "Next";
+  placeTour();
+}
+function placeTour() {
+  if ($("#tour").hidden) return;
+  const s = tSteps[ti], el = s && s.el ? $(s.el) : null, card = $("#tCard"), ring = $("#tRing"), vw = innerWidth, vh = innerHeight;
+  if (!visible(el)) { ring.hidden = true; $("#tour").classList.add("center"); card.style.left = Math.max(16, (vw - card.offsetWidth) / 2) + "px"; card.style.top = Math.max(16, (vh - card.offsetHeight) / 2) + "px"; return; }
+  el.scrollIntoView({ block: "nearest", inline: "nearest" });
+  const r = el.getBoundingClientRect(), pad = 6, gap = 14; $("#tour").classList.remove("center"); ring.hidden = false;
+  Object.assign(ring.style, { left: r.left - pad + "px", top: r.top - pad + "px", width: r.width + pad * 2 + "px", height: r.height + pad * 2 + "px" });
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  let y = r.bottom + pad + gap; if (y + ch > vh - 8) y = Math.max(8, r.top - pad - gap - ch);
+  const x = Math.min(Math.max(16, r.left + r.width / 2 - cw / 2), vw - cw - 16);
+  card.style.left = x + "px"; card.style.top = y + "px";
+}
+addEventListener("resize", placeTour);
+$("#tNext").addEventListener("click", () => { if (ti < tSteps.length - 1) { ti++; drawTour(); } else closeTour(); });
+$("#tBack").addEventListener("click", () => { if (ti > 0) { ti--; drawTour(); } });
+$("#tSkip").addEventListener("click", closeTour);
+$("#helpBtn").addEventListener("click", openTour);
+addEventListener("keydown", (e) => { if ($("#tour").hidden) return; if (e.key === "Escape") closeTour(); if (e.key === "ArrowRight") $("#tNext").click(); if (e.key === "ArrowLeft" && ti > 0) $("#tBack").click(); });
+function maybeTour() { let seen = false; try { seen = localStorage.getItem("es-tour-" + me.uid) === "1"; } catch (e) {} if (!seen) setTimeout(openTour, 400); }
+
 /* ---------- account settings ---------- */
 $("#acGoal").innerHTML = ["3.0", "3.5", "4.0", "4.5"].map((g) => `<option value="${g}">${g} out of 5</option>`).join("");
 $("#acctBtn").addEventListener("click", () => { $("#acName").value = me.name || ""; $("#acGoal").value = String(Number(me.target || 3.5).toFixed(1)); $("#acctM").hidden = false; setTimeout(() => $("#acName").focus(), 30); });
@@ -680,7 +759,7 @@ $("#acctForm").addEventListener("submit", (e) => {
 function startDemo() {
   demo = true; me = { uid: "demo", name: "Alex Rivera", target: 3.5 };
   const saved = Local.load(); tasks = new Map((saved ? saved.tasks : sampleData()).map((t) => [t.id, t])); if (!saved) Local.saveAll();
-  $("#meName").textContent = me.name; $("#meAv").textContent = initials(me.name); view = "dash"; ui.month = curMonth(); render();
+  $("#meName").textContent = me.name; $("#meAv").textContent = initials(me.name); view = "dash"; ui.month = curMonth(); render(); maybeTour();
 }
 function exitDemo() { demo = false; me = null; tasks = new Map(); screen("landing"); }
 $("#ctaDemo").addEventListener("click", startDemo);
@@ -703,7 +782,8 @@ if (auth) auth.onAuthStateChanged(async (u) => {
     else { me = { uid: u.uid, name: String(u.displayName || pendingName || (u.email || "").split("@")[0]).slice(0, 60), email: u.email || "", target: 3.5, createdAt: new Date().toISOString() }; await ref.set({ name: me.name, email: me.email, target: 3.5, createdAt: me.createdAt }); }
   } catch (e) { me = null; screen("landing"); toast("Couldn't open your account. Check your connection."); return; }
   $("#meName").textContent = me.name; $("#meAv").textContent = initials(me.name);
-  unsub = ref.collection("tasks").onSnapshot((snap) => { tasks = new Map(snap.docs.map((d) => [d.id, { ...d.data(), id: d.id }])); render(); }, () => toast("Lost connection. Refresh the page."));
+  let firstSnap = true;
+  unsub = ref.collection("tasks").onSnapshot((snap) => { tasks = new Map(snap.docs.map((d) => [d.id, { ...d.data(), id: d.id }])); render(); if (firstSnap) { firstSnap = false; maybeTour(); } }, () => toast("Lost connection. Refresh the page."));
 });
 else screen("landing");
 </script>
