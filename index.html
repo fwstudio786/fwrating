@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EditScore · Track your editing, cut your mistakes</title>
+<meta name="description" content="EditScore is a performance tracker for video editors. Log your tasks, revisions and mistakes, and see your rating, trends and most common mistakes month by month.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root {
+  --bg: #0e0a09; --panel: #16110f; --panel-2: #1d1714; --panel-3: #241c18; --line: #2e241f; --line-2: #3d3029;
+  --fg: #f3ece7; --muted: #a3958c; --faint: #6f625a;
+  --acc: #ff5a1f; --acc-ink: #ffffff; --acc-soft: rgb(255 90 31 / .14);
+  --mis: #ff5d5d; --cli: #a78bfa; --int: #fbbf24; --good: #34d399; --bad: #ff5d5d;
+  --display: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+  --body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 var(--body); -webkit-font-smoothing: antialiased; }
+button, input, select, textarea { font: inherit; color: inherit; }
+a { color: var(--acc); }
+[hidden] { display: none !important; }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--fg); font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn:hover { border-color: var(--faint); }
+.btn.acc { background: var(--acc); color: var(--acc-ink); border-color: var(--acc); } .btn.acc:hover { filter: brightness(1.08); }
+.btn.ghost { background: none; } .btn.sm { min-height: 32px; padding: 0 11px; font-size: 13px; border-radius: 8px; }
+.btn.danger { color: var(--bad); }
+:is(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.muted { color: var(--muted); } .faint { color: var(--faint); }
+input, select, textarea { min-height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--panel-2); width: 100%; }
+textarea { padding: 10px 12px; min-height: 70px; resize: vertical; }
+label.f { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted); min-width: 0; }
+.mono { font-family: var(--mono); }
+
+/* ---------- top bar ---------- */
+.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); }
+.top .wrap { display: flex; align-items: center; gap: 14px; min-height: 62px; flex-wrap: wrap; padding-block: 8px; }
+.logo { display: flex; align-items: center; gap: 10px; font: 800 19px/1 var(--display); letter-spacing: -.01em; text-decoration: none; color: var(--fg); }
+.logo svg { flex: none; }
+.nav { display: flex; gap: 4px; margin-right: auto; margin-left: 8px; }
+.nav button { border: 0; background: none; color: var(--muted); font-weight: 600; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+.nav button[aria-current="page"] { color: var(--fg); background: var(--panel-2); }
+.me { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--acc-soft); color: var(--acc); font: 700 12px/1 var(--body); flex: none; }
+.demo-bar { background: var(--acc); color: var(--acc-ink); font-weight: 600; font-size: 13px; }
+.demo-bar .wrap { display: flex; align-items: center; gap: 12px; min-height: 38px; flex-wrap: wrap; }
+.demo-bar button { background: rgb(0 0 0 / .14); border: 0; border-radius: 7px; padding: 4px 10px; font-weight: 700; cursor: pointer; color: inherit; }
+@media (max-width: 720px) { .nav { order: 3; width: 100%; margin: 0; overflow-x: auto; } .me span.nm { display: none; } }
+
+/* ---------- landing ---------- */
+.hero { padding-block: 64px 40px; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 48px; align-items: center; }
+@media (max-width: 900px) { .hero { grid-template-columns: minmax(0, 1fr); padding-block: 36px 24px; gap: 32px; } }
+.kicker { display: inline-flex; align-items: center; gap: 8px; font: 600 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--acc); padding: 7px 10px; border: 1px solid rgb(255 90 31 / .35); border-radius: 999px; }
+.hero h1 { margin: 18px 0 14px; font: 900 clamp(40px, 6.4vw, 72px)/0.98 var(--display); letter-spacing: -.02em; text-wrap: balance; }
+.hero h1 em { font-style: normal; color: var(--acc); }
+.hero p.lead { font-size: 18px; color: var(--muted); max-width: 52ch; margin: 0 0 26px; }
+.cta { display: flex; gap: 10px; flex-wrap: wrap; }
+.cta .btn { min-height: 48px; padding: 0 22px; font-size: 15.5px; }
+.preview { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 20px; display: grid; gap: 16px; box-shadow: 0 30px 80px rgb(0 0 0 / .5); }
+.pv-top { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.pv-score { font: 900 64px/0.9 var(--display); }
+.pv-score small { font-size: 22px; color: var(--muted); }
+.feat { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding-block: 20px 70px; }
+@media (max-width: 820px) { .feat { grid-template-columns: minmax(0, 1fr); } }
+.feat div { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+.feat h3 { margin: 10px 0 6px; font: 800 19px/1.2 var(--display); }
+.feat p { margin: 0; color: var(--muted); font-size: 14px; }
+.feat .n { font: 700 12px/1 var(--mono); color: var(--acc); }
+.foot { border-top: 1px solid var(--line); padding-block: 22px 40px; color: var(--faint); font-size: 13px; }
+
+/* ---------- auth ---------- */
+.modal { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: rgb(0 0 0 / .62); padding: 16px; overflow-y: auto; }
+.mbox { width: min(440px, 100%); background: var(--panel); border: 1px solid var(--line-2); border-radius: 16px; padding: 24px; display: grid; gap: 14px; position: relative; }
+.mbox.wide { width: min(760px, 100%); }
+.mbox h2 { margin: 0; font: 800 24px/1.15 var(--display); }
+.xbtn { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--panel-2); cursor: pointer; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 11px; }
+.tabs button { min-height: 36px; border: 0; border-radius: 8px; background: none; color: var(--muted); font-weight: 600; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--panel-3); color: var(--fg); }
+.or { display: flex; align-items: center; gap: 10px; color: var(--faint); font-size: 12px; } .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.err { color: var(--bad); font-size: 13px; } .ok { color: var(--good); font-size: 13px; }
+.linkbtn { background: none; border: 0; color: var(--acc); cursor: pointer; font-size: 13px; padding: 2px; justify-self: start; }
+.gbtn svg { width: 18px; height: 18px; }
+
+/* ---------- app ---------- */
+main.app { padding-block: 24px 70px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.bar h1 { margin: 0 auto 0 0; font: 900 30px/1.1 var(--display); letter-spacing: -.01em; text-wrap: balance; }
+.bar select, .bar input { width: auto; max-width: 100%; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; min-width: 0; }
+.card h2 { margin: 0 0 4px; font: 800 18px/1.25 var(--display); }
+.card .sub { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+.score-card { display: grid; gap: 12px; align-content: start; background: radial-gradient(130% 120% at 0% 0%, rgb(255 90 31 / .12), transparent 60%), var(--panel); }
+.label { font: 600 11.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.big { font: 900 84px/0.9 var(--display); letter-spacing: -.02em; }
+.big small { font-size: 26px; color: var(--muted); }
+.score-row { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.stars { display: inline-flex; gap: 3px; font-size: 22px; color: var(--line-2); } .stars i { font-style: normal; } .stars i.on { color: #f5c84c; }
+.stars i.half { background: linear-gradient(90deg, #f5c84c 50%, var(--line-2) 50%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; font-weight: 700; font-size: 13px; width: fit-content; }
+.pill.ok { color: var(--good); background: rgb(52 211 153 / .12); } .pill.on { color: var(--bad); background: rgb(255 93 93 / .12); }
+.delta { font-size: 13.5px; } .delta.up { color: var(--good); } .delta.down { color: var(--bad); }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+@media (max-width: 520px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { background: var(--panel-2); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 2px; min-width: 0; }
+.tile dt { font: 600 10.5px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.tile dd { margin: 0; font: 900 28px/1.05 var(--display); }
+.tile small { color: var(--faint); font-size: 12px; }
+.better ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.better li { display: flex; gap: 10px; align-items: flex-start; }
+.ic { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+.ic.up { background: rgb(52 211 153 / .14); color: var(--good); } .ic.down { background: rgb(255 93 93 / .14); color: var(--bad); } .ic.flat { background: var(--panel-3); color: var(--muted); }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { fill: var(--muted); font: 500 11px var(--body); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.cats { display: grid; gap: 9px; }
+.cat { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 96px; gap: 10px; align-items: center; font-size: 13.5px; }
+.cat .trk { height: 10px; border-radius: 5px; background: var(--panel-3); overflow: hidden; position: relative; }
+.cat .trk b { position: absolute; inset: 0 auto 0 0; background: var(--mis); border-radius: 5px; }
+.cat .trk s { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--fg); opacity: .55; }
+.cat .n { font-family: var(--mono); font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; }
+table { width: 100%; border-collapse: collapse; min-width: 780px; font-size: 13.5px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font: 600 10.5px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--panel); }
+td.num, th.num { text-align: right; font-family: var(--mono); }
+tbody tr { cursor: pointer; } tbody tr:hover { background: var(--panel); }
+tr:last-child td { border-bottom: 0; }
+.st { font: 700 11.5px/1 var(--body); padding: 5px 8px; border-radius: 6px; white-space: nowrap; }
+.st.progress { color: #60a5fa; background: rgb(96 165 250 / .12); } .st.delivered { color: var(--cli); background: rgb(167 139 250 / .12); }
+.st.revision { color: var(--int); background: rgb(251 191 36 / .12); } .st.approved { color: var(--good); background: rgb(52 211 153 / .12); } .st.cancelled { color: var(--faint); background: var(--panel-3); }
+.late { color: var(--bad); font-weight: 600; } .ontime { color: var(--good); }
+.bad { color: var(--bad); font-weight: 700; }
+.empty { padding: 30px 18px; text-align: center; color: var(--muted); }
+.empty b { display: block; color: var(--fg); font: 800 19px/1.3 var(--display); margin-bottom: 6px; }
+
+/* task editor */
+.fgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fgrid .full { grid-column: 1 / -1; }
+@media (max-width: 560px) { .fgrid { grid-template-columns: minmax(0, 1fr); } }
+.logsec { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 10px; }
+.logsec h3 { margin: 0; font: 800 16px/1.2 var(--display); display: flex; align-items: center; gap: 8px; }
+.logsec h3 .cnt { font: 700 12px/1 var(--mono); padding: 4px 7px; border-radius: 6px; background: var(--panel-3); color: var(--muted); }
+.qadd { display: flex; flex-wrap: wrap; gap: 8px; }
+.loglist { display: grid; gap: 6px; }
+.li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); font-size: 13.5px; }
+.li .tg { font: 700 11px/1 var(--body); padding: 4px 6px; border-radius: 5px; }
+.tg.client { color: var(--cli); background: rgb(167 139 250 / .14); } .tg.internal, .tg.team { color: var(--int); background: rgb(251 191 36 / .14); } .tg.self { color: #60a5fa; background: rgb(96 165 250 / .14); }
+.li .x { border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 14px; width: 28px; height: 28px; border-radius: 7px; }
+.li .x:hover { color: var(--bad); background: rgb(255 93 93 / .1); }
+.misform { display: grid; grid-template-columns: minmax(0, 1fr) 140px 92px 110px auto; gap: 8px; }
+@media (max-width: 720px) { .misform { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .misform input:first-child { grid-column: 1 / -1; } }
+.mfoot { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: 14px; }
+.mfoot .left { margin-right: auto; }
+.toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; background: var(--fg); color: var(--bg); font-weight: 600; padding: 10px 16px; border-radius: 10px; transition: .2s; z-index: 80; pointer-events: none; max-width: calc(100vw - 32px); }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+.how { font-size: 13px; color: var(--muted); line-height: 1.65; }
+.how b { color: var(--fg); }
+.loading { min-height: 60vh; display: grid; place-items: center; color: var(--muted); }
+.spin { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--line-2); border-top-color: var(--acc); animation: spin .8s linear infinite; margin: 0 auto 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } .toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="demo-bar" id="demoBar" hidden><div class="wrap"><span>Demo mode: sample data, saved only in this browser.</span><button id="demoReset" type="button">Reset sample data</button><button id="demoExit" type="button">Exit demo</button></div></div>
+<header class="top"><div class="wrap">
+  <a class="logo" href="#" id="logo" aria-label="EditScore home"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#ff5a1f"/><rect x="6" y="9" width="11" height="5" rx="1.5" fill="#fff"/><rect x="11" y="18" width="15" height="5" rx="1.5" fill="#fff" opacity=".6"/><path d="M19 8.5l2.4 2.4L26 6.3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="appName">EditScore</span></a>
+  <nav class="nav" id="nav" hidden aria-label="Sections"><button type="button" data-v="dash" aria-current="page">Dashboard</button><button type="button" data-v="tasks">Tasks</button><button type="button" data-v="clients">Clients</button></nav>
+  <div class="me" id="meBox" hidden><span class="av" id="meAv"></span><span class="nm" id="meName"></span><button class="btn sm" id="newTop" type="button">+ Task</button><button class="btn sm ghost" id="acctBtn" type="button">Account</button><button class="btn sm ghost" id="outBtn" type="button">Sign out</button></div>
+  <div class="me" id="guestBox"><button class="btn sm ghost" id="signInTop" type="button">Sign in</button><button class="btn sm acc" id="signUpTop" type="button">Create account</button></div>
+</div></header>
+
+<!-- signed-out home page -->
+<section id="landing">
+  <div class="wrap hero">
+    <div>
+      <span class="kicker">For video editors</span>
+      <h1>Know if you're getting <em>better</em> at editing.</h1>
+      <p class="lead">Log your tasks, revisions and mistakes in seconds. EditScore turns them into a monthly rating, shows which mistakes keep coming back, and tells you if you're improving.</p>
+      <div class="cta"><button class="btn acc" id="ctaUp" type="button">Create free account</button><button class="btn" id="ctaDemo" type="button">Try the demo</button></div>
+      <p class="faint" style="font-size:13px;margin-top:14px">Your data is private to your account. No studio or manager needed.</p>
+    </div>
+    <div class="preview" aria-hidden="true">
+      <div class="label">November rating</div>
+      <div class="pv-top"><span class="pv-score">4.3<small> / 5</small></span><span class="stars"><i class="on">★</i><i class="on">★</i><i class="on">★</i><i class="on">★</i><i class="half">★</i></span></div>
+      <span class="pill ok">▲ 0.6 better than October</span>
+      <div class="cats">
+        <div class="cat"><span>Text &amp; captions</span><span class="trk"><b style="width:62%"></b></span><span class="n">5 ↓ from 8</span></div>
+        <div class="cat"><span>Audio &amp; music</span><span class="trk"><b style="width:38%"></b></span><span class="n">3 ↓ from 4</span></div>
+        <div class="cat"><span>Cuts &amp; timing</span><span class="trk"><b style="width:25%"></b></span><span class="n">2 = same</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="wrap feat">
+    <div><span class="n">01</span><h3>Log every task</h3><p>Client, type, assigned date, due date and delivery. See your on-time rate and how long edits take you.</p></div>
+    <div><span class="n">02</span><h3>Count revisions and mistakes</h3><p>One tap for a client or internal revision. Note each mistake with its category and the time in the video.</p></div>
+    <div><span class="n">03</span><h3>Watch yourself improve</h3><p>A monthly rating, graphs of mistakes per video, your most common mistakes, and which clients ask for the most changes.</p></div>
+  </div>
+  <div class="wrap foot">© <span id="yr"></span> EditScore. All rights reserved.</div>
+</section>
+
+<div class="loading" id="loading" hidden><div><div class="spin"></div><span id="loadMsg">Loading…</span></div></div>
+<main class="wrap app" id="app" hidden></main>
+
+<!-- sign in / create account -->
+<div class="modal" id="authM" hidden role="dialog" aria-modal="true" aria-labelledby="authH">
+  <div class="mbox">
+    <button class="xbtn" id="authX" type="button" aria-label="Close">✕</button>
+    <h2 id="authH">Welcome</h2>
+    <div class="tabs" role="tablist" id="aTabs"><button role="tab" type="button" data-t="in" aria-selected="true">Sign in</button><button role="tab" type="button" data-t="up" aria-selected="false">Create account</button></div>
+    <div id="paneIn" style="display:grid;gap:12px">
+      <button class="btn gbtn" id="gBtn" type="button"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continue with Google</button>
+      <div class="or">or with email</div>
+      <form id="inForm" style="display:grid;gap:10px">
+        <input id="inEm" type="email" autocomplete="email" placeholder="Email" required aria-label="Email">
+        <input id="inPw" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
+        <button class="btn acc" type="submit">Sign in</button>
+        <button class="linkbtn" id="forgot" type="button">Forgot password?</button>
+      </form>
+    </div>
+    <form id="paneUp" hidden style="display:grid;gap:10px">
+      <input id="upName" autocomplete="name" placeholder="Your name" required maxlength="60" aria-label="Your name">
+      <input id="upEm" type="email" autocomplete="email" placeholder="Your email" required aria-label="Email">
+      <input id="upPw" type="password" autocomplete="new-password" placeholder="Make a password (8+ characters)" required minlength="8" aria-label="New password">
+      <button class="btn acc" type="submit">Create account</button>
+      <small class="muted">We'll email you a link to confirm your address. Google accounts don't need this step.</small>
+    </form>
+    <div id="paneVerify" hidden style="display:grid;gap:12px">
+      <p style="margin:0">We sent a confirmation link to <b id="vEmail"></b>. Open your inbox (check Spam too), click the link, then come back here.</p>
+      <button class="btn acc" id="vDone" type="button">I've confirmed my email</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="vResend" type="button">Send the link again</button><button class="btn ghost" id="vOther" type="button">Use another account</button></div>
+    </div>
+    <div class="err" id="aErr" role="alert"></div><div class="ok" id="aOk" role="status"></div>
+  </div>
+</div>
+
+<!-- task editor -->
+<div class="modal" id="taskM" hidden role="dialog" aria-modal="true" aria-labelledby="taskH">
+  <div class="mbox wide" id="taskBox"></div>
+</div>
+<!-- account settings -->
+<div class="modal" id="acctM" hidden role="dialog" aria-modal="true" aria-labelledby="acctH">
+  <form class="mbox" id="acctForm">
+    <button class="xbtn" data-close type="button" aria-label="Close">✕</button>
+    <h2 id="acctH">Your account</h2>
+    <label class="f">Your name<input id="acName" maxlength="60" required></label>
+    <label class="f">Your goal rating<select id="acGoal"></select></label>
+    <small class="muted">The goal line shows on your rating chart, and the dashboard tells you if you're above or below it.</small>
+    <div class="mfoot"><button class="btn ghost" data-close type="button">Cancel</button><button class="btn acc" type="submit">Save</button></div>
+  </form>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore-compat.js"></script>
+<script>
+/* =====================================================================
+   EditScore: a personal performance tracker for video editors.
+   Each editor has their own private account. Data lives in Firebase (Firestore) under users/{uid}.
+   Until the Firebase settings below are filled in, only the demo (sample data in this browser) works.
+   ===================================================================== */
+const APP_NAME = "EditScore";
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDsIb1JPBMiKhOztVRCHz0To0rS-jMl0No",
+  authDomain: "fw-rating.firebaseapp.com",
+  projectId: "fw-rating",
+  storageBucket: "fw-rating.firebasestorage.app",
+  messagingSenderId: "319358046209",
+  appId: "1:319358046209:web:d60fbc5ce0080e4074b000"
+};
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const today = () => new Date().toLocaleDateString("en-CA");
+const initials = (n) => (n || "?").split(/\s+/).filter(Boolean).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+const fmtDate = (d) => { if (!d) return ""; const x = new Date(d + "T00:00:00"); return isNaN(x) ? d : x.toLocaleDateString("en-GB", { day: "numeric", month: "short" }); };
+const fmtTC = (s) => { if (s == null || s === "") return ""; s = Math.max(0, Math.floor(Number(s) || 0)); const m = Math.floor(s / 60), x = s % 60; return m + ":" + String(x).padStart(2, "0"); };
+const parseTC = (t) => { t = String(t || "").trim(); if (!t) return null; const p = t.split(":").map(Number); if (p.some(isNaN)) return null; return p.reduce((a, b) => a * 60 + b, 0); };
+const daysBetween = (a, b) => Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000);
+function toast(m) { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 2400); }
+$("#yr").textContent = new Date().getFullYear();
+
+/* ---------- the rating ---------- */
+const W_CREV = 1.0, W_IREV = 0.5, W_MIS = 0.25;
+const CATS = { text: "Text & captions", spelling: "Spelling", audio: "Audio & music", color: "Color", cuts: "Cuts & timing", brand: "Brand & logo", motion: "Motion & graphics", export: "Export & format", brief: "Missed the brief", other: "Other" };
+const STATUS = { progress: "In progress", delivered: "Delivered", revision: "In revision", approved: "Approved", cancelled: "Cancelled" };
+const score = (videos, cRev, iRev, mis) => (videos ? Math.max(1, Math.min(5, 5 - (cRev * W_CREV + iRev * W_IREV + mis * W_MIS) / videos)) : null);
+const fmtScore = (x) => (Math.floor(x * 10 + 1e-9) / 10).toFixed(1);
+const curMonth = () => today().slice(0, 7);
+const prevMonth = (k) => { const [y, m] = k.split("-").map(Number); return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`; };
+const monthName = (k) => new Date(k + "-01T00:00:00").toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+const monthLong = (k) => new Date(k + "-01T00:00:00").toLocaleDateString("en-GB", { month: "long" });
+const monthShort = (k) => new Date(k + "-01T00:00:00").toLocaleDateString("en-GB", { month: "short" });
+// A task counts in the month it was delivered (or assigned, while it's still in progress).
+const monthOf = (t) => String(t.delivered || t.assigned || t.createdAt || "").slice(0, 7);
+function totals(list) {
+  const r = { tasks: list.length, videos: 0, cRev: 0, iRev: 0, mis: 0, onTime: 0, withDue: 0, turn: [], approved: 0, firstTime: 0, cats: {} };
+  list.forEach((t) => {
+    if (t.status === "cancelled") return;
+    const v = Math.max(1, Number(t.videos) || 1), revs = t.revs || [], mis = t.mistakes || [];
+    const c = revs.filter((x) => x.kind === "client").length;
+    r.videos += v; r.cRev += c; r.iRev += revs.length - c; r.mis += mis.length;
+    mis.forEach((m) => { r.cats[m.cat || "other"] = (r.cats[m.cat || "other"] || 0) + 1; });
+    if (t.delivered && t.due) { r.withDue++; if (t.delivered <= t.due) r.onTime++; }
+    if (t.delivered && t.assigned) r.turn.push(Math.max(0, daysBetween(t.assigned, t.delivered)));
+    if (t.status === "approved") { r.approved++; if (!c) r.firstTime++; }
+  });
+  r.revs = r.cRev + r.iRev; r.score = score(r.videos, r.cRev, r.iRev, r.mis);
+  r.misPer = r.videos ? r.mis / r.videos : null; r.cRevPer = r.videos ? r.cRev / r.videos : null; r.revPer = r.videos ? r.revs / r.videos : null;
+  r.onTimePct = r.withDue ? Math.round((r.onTime / r.withDue) * 100) : null;
+  r.avgTurn = r.turn.length ? r.turn.reduce((a, b) => a + b, 0) / r.turn.length : null;
+  return r;
+}
+const stars = (s) => { const f = Math.round(s * 2) / 2; return `<span class="stars" aria-label="${fmtScore(s)} out of 5">${[1, 2, 3, 4, 5].map((i) => `<i class="${f >= i ? "on" : f >= i - 0.5 ? "half" : ""}">★</i>`).join("")}</span>`; };
+
+/* ---------- storage: Firebase for real accounts, this browser for the demo ---------- */
+const configured = !/^PASTE/.test(FIREBASE_CONFIG.apiKey);
+let auth = null, fs = null;
+if (configured && window.firebase) { firebase.initializeApp(FIREBASE_CONFIG); auth = firebase.auth(); fs = firebase.firestore(); }
+let me = null, tasks = new Map(), demo = false, unsub = null, view = "dash";
+const ui = { month: curMonth(), q: "", st: "", client: "", sort: "new" };
+
+const Local = {
+  key: "editscore-demo",
+  load() { try { const d = JSON.parse(localStorage.getItem(this.key) || "null"); if (d && Array.isArray(d.tasks)) return d; } catch (e) {} return null; },
+  saveAll() { try { localStorage.setItem(this.key, JSON.stringify({ tasks: [...tasks.values()] })); } catch (e) {} },
+};
+const DB = {
+  save(t) {
+    t.updatedAt = new Date().toISOString(); tasks.set(t.id, t); render();
+    if (demo) { Local.saveAll(); return; }
+    fs.collection("users").doc(me.uid).collection("tasks").doc(t.id).set(clean(t)).catch(() => toast("Couldn't save. Check your connection."));
+  },
+  remove(id) {
+    tasks.delete(id); render();
+    if (demo) { Local.saveAll(); return; }
+    fs.collection("users").doc(me.uid).collection("tasks").doc(id).delete().catch(() => toast("Couldn't delete. Check your connection."));
+  },
+};
+// Only the fields we know about are saved, with sensible limits.
+function clean(t) {
+  const s = (v, n) => String(v || "").slice(0, n), d = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(v || "") ? v : "");
+  return { id: t.id, title: s(t.title, 120), client: s(t.client, 80), type: s(t.type, 40), videos: Math.max(1, Math.min(99, Math.round(Number(t.videos) || 1))),
+    assigned: d(t.assigned), due: d(t.due), delivered: d(t.delivered), status: STATUS[t.status] ? t.status : "progress", link: s(t.link, 500), notes: s(t.notes, 2000),
+    revs: (t.revs || []).slice(0, 100).map((r) => ({ id: s(r.id, 30), kind: r.kind === "client" ? "client" : "internal", at: d(r.at), note: s(r.note, 300) })),
+    mistakes: (t.mistakes || []).slice(0, 200).map((m) => ({ id: s(m.id, 30), text: s(m.text, 300), cat: CATS[m.cat] ? m.cat : "other", src: ["client", "team", "self"].includes(m.src) ? m.src : "client", t: Number.isFinite(m.t) ? m.t : null, at: d(m.at) })),
+    createdAt: s(t.createdAt, 40), updatedAt: s(t.updatedAt, 40) };
+}
+
+/* ---------- sample data for the demo: five months of a freelancer getting better ---------- */
+function sampleData() {
+  const out = [], clients = ["Northwind Realty", "Blue Fork Cafe", "Apex Fitness", "Lumen Skincare", "Driveway Motors"], types = ["Reel", "Short", "YouTube video", "Ad"];
+  const mtext = { text: ["Caption overlaps the logo", "Text not in brand font", "Captions out of sync"], spelling: ["Typo in the price", "Client name misspelled"], audio: ["Music too loud over voice", "Audio pops at the cut"], color: ["Skin tones too orange", "Shots don't match in color"], cuts: ["Cut too early on the punchline", "Jump cut in the intro"], brand: ["Old logo used", "Brand color wrong on lower third"], motion: ["Title animation too slow"], export: ["Exported in 16:9 instead of 9:16"], brief: ["Missed the call to action", "Forgot the reference style"], other: ["Wrong clip used"] };
+  const cats = Object.keys(mtext);
+  let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const pick = (a) => a[Math.floor(rnd() * a.length)];
+  for (let back = 4; back >= 0; back--) {
+    const base = new Date(); base.setDate(1); base.setMonth(base.getMonth() - back);
+    const y = base.getFullYear(), m = base.getMonth(), n = 5 + Math.floor(rnd() * 3), quality = 1 - back * 0.18;     // older months have more problems
+    for (let i = 0; i < n; i++) {
+      const day = 2 + Math.floor(rnd() * 22), a = new Date(y, m, day), due = new Date(y, m, day + 3), late = rnd() < 0.25 + back * 0.05;
+      const del = new Date(y, m, day + (late ? 4 + Math.floor(rnd() * 2) : 1 + Math.floor(rnd() * 3)));
+      const iso = (x) => x.toLocaleDateString("en-CA");
+      const isCurrent = back === 0 && i >= n - 2, revs = [], mistakes = [];
+      const nc = Math.max(0, Math.round((rnd() * 2.2) * (1 - quality * 0.6))), ni = Math.max(0, Math.round(rnd() * 2 * (1.2 - quality * 0.7)));
+      for (let k = 0; k < nc; k++) revs.push({ id: uid(), kind: "client", at: iso(del), note: "" });
+      for (let k = 0; k < ni; k++) revs.push({ id: uid(), kind: "internal", at: iso(del), note: "" });
+      const nm = Math.max(0, Math.round(rnd() * 3.2 * (1.25 - quality * 0.8)));
+      for (let k = 0; k < nm; k++) { const c = rnd() < 0.35 ? "text" : pick(cats); mistakes.push({ id: uid(), text: pick(mtext[c]), cat: c, src: pick(["client", "team", "self"]), t: Math.floor(rnd() * 50), at: iso(del) }); }
+      out.push({ id: uid(), title: `${pick(["Spring promo", "Open house tour", "Menu launch", "Client testimonial", "Behind the scenes", "Product teaser", "Weekly tips", "New arrivals"])} ${pick(["reel", "cut", "edit", "short"])}`,
+        client: pick(clients), type: pick(types), videos: rnd() < 0.2 ? 3 : 1, assigned: iso(a), due: iso(due), delivered: isCurrent ? "" : iso(del),
+        status: isCurrent ? "progress" : rnd() < 0.15 ? "revision" : "approved", link: "", notes: "", revs: isCurrent ? [] : revs, mistakes: isCurrent ? [] : mistakes,
+        createdAt: new Date(a).toISOString(), updatedAt: new Date(a).toISOString() });
+    }
+  }
+  return out;
+}
+
+/* ---------- screens ---------- */
+function screen(which) {
+  $("#landing").hidden = which !== "landing"; $("#loading").hidden = which !== "loading"; $("#app").hidden = which !== "app";
+  $("#nav").hidden = $("#meBox").hidden = which !== "app"; $("#guestBox").hidden = which === "app";
+  $("#demoBar").hidden = !(which === "app" && demo);
+}
+function loadingMsg(t) { $("#loadMsg").textContent = t; screen("loading"); }
+$("#logo").addEventListener("click", (e) => { e.preventDefault(); if (me) { view = "dash"; render(); } });
+$$("#nav button").forEach((b) => b.addEventListener("click", () => { view = b.dataset.v; render(); }));
+
+function render() {
+  if (!me) return;
+  $$("#nav button").forEach((b) => (b.dataset.v === view ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
+  const a = document.activeElement, keep = a && a.id && $("#app").contains(a) ? { id: a.id, s: a.selectionStart, e: a.selectionEnd } : null;
+  ({ dash: renderDash, tasks: renderTasks, clients: renderClients }[view] || renderDash)($("#app"));
+  if (keep) { const el = document.getElementById(keep.id); if (el) { el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
+  screen("app");
+}
+const all = () => [...tasks.values()];
+const byMonth = () => { const m = new Map(); all().forEach((t) => { const k = monthOf(t); if (!k) return; (m.get(k) || m.set(k, []).get(k)).push(t); }); return m; };
+
+/* ---------- charts (plain SVG) ---------- */
+function lineChart(months, vals, target) {
+  const W = 520, H = 220, L = 30, R = 12, T = 16, B = 30, w = W - L - R, h = H - T - B;
+  const x = (i) => L + (months.length === 1 ? w / 2 : (i * w) / (months.length - 1)), y = (v) => T + h - ((v - 1) / 4) * h;
+  const pts = vals.map((v, i) => (v == null ? null : [x(i), y(v)]));
+  let path = "", open = false; pts.forEach((p) => { if (!p) { open = false; return; } path += (open ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1) + " "; open = true; });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Rating by month">
+    ${[1, 2, 3, 4, 5].map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`).join("")}
+    <line x1="${L}" x2="${W - R}" y1="${y(target)}" y2="${y(target)}" stroke="var(--acc)" stroke-opacity=".6" stroke-width="1.5" stroke-dasharray="5 5"/><text x="${L + 6}" y="${y(target) + 14}" style="fill:var(--acc)">your goal ${target}</text>
+    <path d="${path}" fill="none" stroke="var(--fg)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map((p, i) => (p ? `<circle cx="${p[0]}" cy="${p[1]}" r="5" fill="${vals[i] >= target ? "var(--good)" : "var(--mis)"}" stroke="var(--panel)" stroke-width="2"><title>${monthName(months[i])}: ${fmtScore(vals[i])}</title></circle><text x="${p[0]}" y="${p[1] - 11}" text-anchor="middle" style="fill:var(--fg);font-weight:700">${fmtScore(vals[i])}</text>` : "")).join("")}
+    ${months.map((k, i) => `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${monthShort(k)}</text>`).join("")}</svg>`;
+}
+function barChart(months, series) {
+  const W = 520, H = 220, L = 30, R = 12, T = 14, B = 30, w = W - L - R, h = H - T - B;
+  const max = Math.max(0.5, ...series.flatMap((s) => s.vals.filter((v) => v != null))), top = Math.ceil(max * 2) / 2;
+  const gw = w / months.length, bw = Math.min(20, (gw - 14) / series.length), y = (v) => T + h - (v / top) * h;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Per video by month">
+    ${[0, top / 2, top].map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${+v.toFixed(2)}</text>`).join("")}
+    ${months.map((k, i) => { const gx = L + i * gw + (gw - bw * series.length - 4 * (series.length - 1)) / 2;
+      return series.map((s, j) => { const v = s.vals[i]; if (v == null) return ""; const bx = gx + j * (bw + 4), by = y(v);
+        return `<rect x="${bx}" y="${by}" width="${bw}" height="${Math.max(0, T + h - by)}" rx="4" fill="${s.color}"><title>${s.name}, ${monthName(k)}: ${v.toFixed(2)} per video</title></rect>`; }).join("")
+        + `<text x="${L + i * gw + gw / 2}" y="${H - 8}" text-anchor="middle">${monthShort(k)}</text>`; }).join("")}</svg>`;
+}
+
+/* ---------- dashboard ---------- */
+function trendLine(label, a, b, ka, kb, lowerBetter, isScore, pct) {
+  if (a == null || b == null) return "";
+  const f = (v) => Number(isScore ? fmtScore(v) : pct ? Math.round(v) : v.toFixed(1)); a = f(a); b = f(b);
+  const show = (v) => (pct ? v + "%" : v.toFixed(1));
+  const d = b - a, same = Math.abs(d) < 0.05, good = lowerBetter ? d < 0 : d > 0;
+  return `<li><span class="ic ${same ? "flat" : good ? "up" : "down"}" aria-hidden="true">${same ? "=" : good ? "↑" : "↓"}</span><span>${same ? `${label} stayed about the same (${show(a)} → ${show(b)}).`
+    : `${label} went from <b>${show(a)}</b> in ${monthLong(ka)} to <b>${show(b)}</b> in ${monthLong(kb)}. ${good ? "Getting better." : "Getting worse."}`}</span></li>`;
+}
+function renderDash(m) {
+  const bm = byMonth(), k = ui.month, target = Number(me.target) || 3.5;
+  const months = []; let c = curMonth(); for (let i = 0; i < 6; i++) { months.unshift(c); c = prevMonth(c); }
+  const T = new Map(months.map((x) => [x, bm.has(x) ? totals(bm.get(x)) : null]));
+  const allMonths = [...new Set([curMonth(), ...bm.keys()])].sort().reverse();
+  const cur = bm.has(k) ? totals(bm.get(k)) : null, pk = prevMonth(k), prev = bm.has(pk) ? totals(bm.get(pk)) : null;
+  const done = k < curMonth(), first = (me.name || "").split(" ")[0];
+  const delta = cur && prev && cur.score != null && prev.score != null ? Number(fmtScore(cur.score)) - Number(fmtScore(prev.score)) : null;
+  const withData = [...bm.keys()].filter((x) => x <= k && totals(bm.get(x)).score != null).sort(), kb = withData[withData.length - 1], ka = withData[withData.length - 2];
+  const A = ka ? totals(bm.get(ka)) : null, B2 = kb ? totals(bm.get(kb)) : null;
+  // most common mistakes this month, with last month's count beside it
+  const catRows = cur ? Object.entries(cur.cats).sort((a, b) => b[1] - a[1]) : [], catMax = Math.max(1, ...catRows.map(([, n]) => n), ...(prev ? Object.values(prev.cats) : [1]));
+  if (!all().length) {
+    m.innerHTML = `<div class="bar"><h1>Welcome${first ? ", " + esc(first) : ""}</h1></div>
+      <div class="card empty"><b>Add your first task</b>Log each video you edit: the client, when it was given to you, the due date and when you delivered it. Then add revisions and mistakes as they come in.<br><br><button class="btn acc" data-new type="button">+ Add a task</button></div>`;
+    $("[data-new]", m).addEventListener("click", () => openTask()); return;
+  }
+  m.innerHTML = `
+  <div class="bar"><h1>${first ? "Hi " + esc(first) + ", here's" : "Here's"} how you're doing</h1>
+    <select id="moSel" aria-label="Month">${allMonths.map((x) => `<option value="${x}" ${x === k ? "selected" : ""}>${esc(monthName(x))}${x === curMonth() ? " (this month)" : ""}</option>`).join("")}</select></div>
+  <section class="grid2">
+    <div class="card score-card">
+      <span class="label">${esc(monthName(k))} rating${done ? "" : " so far"}</span>
+      ${cur && cur.score != null ? `<div class="score-row"><span class="big">${fmtScore(cur.score)}<small> / 5</small></span>${stars(cur.score)}</div>
+        <span class="pill ${cur.score >= target ? "ok" : "on"}">${cur.score >= target ? "✓ At or above your goal of " + target : "Below your goal of " + target}</span>
+        ${delta != null ? `<span class="delta ${Math.abs(delta) < 0.05 ? "" : delta > 0 ? "up" : "down"}">${Math.abs(delta) < 0.05 ? "Same as" : delta > 0 ? "▲ " + delta.toFixed(1) + " better than" : "▼ " + Math.abs(delta).toFixed(1) + " lower than"} ${esc(monthLong(pk))} (${fmtScore(prev.score)})</span>` : ""}`
+        : `<div class="empty" style="padding:6px 0;text-align:left"><b>No tasks in ${esc(monthName(k))} yet</b>Tasks count in the month you deliver them.</div>`}
+      <div class="tiles" style="margin-top:6px"><div class="tile"><dt>On time</dt><dd>${cur && cur.onTimePct != null ? cur.onTimePct + "%" : "—"}</dd><small>${cur && cur.withDue ? cur.onTime + " of " + cur.withDue + " delivered" : "needs due + delivery dates"}</small></div>
+        <div class="tile"><dt>Avg. turnaround</dt><dd>${cur && cur.avgTurn != null ? cur.avgTurn.toFixed(1) + "d" : "—"}</dd><small>given → delivered</small></div>
+        <div class="tile"><dt>First-time approvals</dt><dd>${cur && cur.approved ? Math.round((cur.firstTime / cur.approved) * 100) + "%" : "—"}</dd><small>${cur && cur.approved ? cur.firstTime + " of " + cur.approved + " approved" : "no client revisions"}</small></div></div>
+    </div>
+    <div class="card"><h2>${esc(monthLong(k))} in numbers</h2><p class="sub">Fewer revisions and mistakes per video means a higher rating.</p>
+      <dl class="tiles">
+        <div class="tile"><dt>Videos</dt><dd>${cur ? cur.videos : 0}</dd><small>${cur ? cur.tasks + " task" + (cur.tasks === 1 ? "" : "s") : "&nbsp;"}</small></div>
+        <div class="tile"><dt>Client revisions</dt><dd>${cur ? cur.cRev : 0}</dd><small>−${W_CREV.toFixed(1)} each per video</small></div>
+        <div class="tile"><dt>Internal revisions</dt><dd>${cur ? cur.iRev : 0}</dd><small>−${W_IREV} each per video</small></div>
+        <div class="tile"><dt>Mistakes</dt><dd>${cur ? cur.mis : 0}</dd><small>−${W_MIS} each per video</small></div>
+        <div class="tile"><dt>Mistakes / video</dt><dd>${cur && cur.misPer != null ? cur.misPer.toFixed(1) : "—"}</dd><small>lower is better</small></div>
+        <div class="tile"><dt>Revisions / video</dt><dd>${cur && cur.revPer != null ? cur.revPer.toFixed(1) : "—"}</dd><small>client + internal</small></div>
+      </dl></div>
+  </section>
+  <section class="card better"><h2>Are you getting better?</h2>
+    ${A && B2 ? `<ul>${trendLine("Your rating", A.score, B2.score, ka, kb, false, true)}${trendLine("Mistakes per video", A.misPer, B2.misPer, ka, kb, true)}${trendLine("Client revisions per video", A.cRevPer, B2.cRevPer, ka, kb, true)}${A.onTimePct != null && B2.onTimePct != null ? trendLine("On-time delivery", A.onTimePct, B2.onTimePct, ka, kb, false, false, true) : ""}</ul>`
+      : `<p class="muted" style="margin:0">Once you have two months of tasks, this compares them so you can see if you're improving.</p>`}
+  </section>
+  <section class="grid2">
+    <div class="card chart"><h2>Rating by month</h2><p class="sub">Last 6 months. The dashed line is your goal (change it in your account).</p>${lineChart(months, months.map((x) => (T.get(x) ? T.get(x).score : null)), target)}</div>
+    <div class="card chart"><h2>Mistakes and revisions per video</h2><p class="sub">Lower bars are better.</p>${barChart(months, [
+      { name: "Mistakes", color: "var(--mis)", vals: months.map((x) => (T.get(x) ? T.get(x).misPer : null)) },
+      { name: "Client revisions", color: "var(--cli)", vals: months.map((x) => (T.get(x) ? T.get(x).cRevPer : null)) },
+      { name: "Internal revisions", color: "var(--int)", vals: months.map((x) => (T.get(x) && T.get(x).videos ? T.get(x).iRev / T.get(x).videos : null)) }])}
+      <div class="legend"><span><i style="background:var(--mis)"></i>Mistakes</span><span><i style="background:var(--cli)"></i>Client revisions</span><span><i style="background:var(--int)"></i>Internal revisions</span></div></div>
+  </section>
+  <section class="card"><h2>Your most common mistakes in ${esc(monthLong(k))}</h2><p class="sub">The white mark is ${esc(monthLong(pk))}. Work on the top one first.</p>
+    ${catRows.length ? `<div class="cats">${catRows.map(([c2, n]) => { const p = prev ? prev.cats[c2] || 0 : null;
+      return `<div class="cat"><span>${esc(CATS[c2] || c2)}</span><span class="trk"><b style="width:${(n / catMax) * 100}%"></b>${p ? `<s style="left:calc(${(p / catMax) * 100}% - 1px)"></s>` : ""}</span><span class="n">${n}${p == null ? "" : n < p ? " ↓ from " + p : n > p ? " ↑ from " + p : " = same"}</span></div>`; }).join("")}</div>`
+      : `<p class="muted" style="margin:0">No mistakes logged ${done ? "in " + esc(monthLong(k)) : "this month"}. Nice.</p>`}
+  </section>
+  <p class="how"><b>How the rating works:</b> each month starts at 5. For every video, each client revision takes off ${W_CREV.toFixed(1)}, each internal revision ${W_IREV}, and each mistake ${W_MIS}. It never goes below 1. A task counts in the month you delivered it.</p>`;
+  $("#moSel").addEventListener("change", (e) => { ui.month = e.target.value; render(); });
+}
+
+/* ---------- tasks ---------- */
+function renderTasks(m) {
+  const q = ui.q.trim().toLowerCase(), clients = [...new Set(all().map((t) => t.client).filter(Boolean))].sort();
+  let list = all().filter((t) => (!ui.st || t.status === ui.st) && (!ui.client || t.client === ui.client) && (!q || [t.title, t.client, t.type, t.notes, ...(t.mistakes || []).map((x) => x.text)].join(" ").toLowerCase().includes(q)));
+  list.sort((a, b) => ui.sort === "due" ? String(a.due || "9").localeCompare(String(b.due || "9")) : String(b.assigned || b.createdAt).localeCompare(String(a.assigned || a.createdAt)));
+  m.innerHTML = `<div class="bar"><h1>Tasks</h1>
+      <input type="search" id="tq" placeholder="Search tasks, clients or mistakes" value="${esc(ui.q)}" aria-label="Search tasks" style="min-width:min(260px,100%)">
+      <select id="tst" aria-label="Status"><option value="">All statuses</option>${Object.entries(STATUS).map(([k2, l]) => `<option value="${k2}" ${ui.st === k2 ? "selected" : ""}>${l}</option>`).join("")}</select>
+      <select id="tcl" aria-label="Client"><option value="">All clients</option>${clients.map((c2) => `<option ${ui.client === c2 ? "selected" : ""}>${esc(c2)}</option>`).join("")}</select>
+      <select id="tso" aria-label="Sort"><option value="new" ${ui.sort === "new" ? "selected" : ""}>Newest first</option><option value="due" ${ui.sort === "due" ? "selected" : ""}>Due date</option></select>
+      <button class="btn" id="csv" type="button">Export CSV</button><button class="btn acc" data-new type="button">+ Add task</button></div>
+    ${list.length ? `<div class="tablewrap"><table><thead><tr><th>Task</th><th>Client</th><th>Given</th><th>Due</th><th>Delivered</th><th class="num">Videos</th><th class="num">Client rev.</th><th class="num">Internal rev.</th><th class="num">Mistakes</th><th>Status</th></tr></thead><tbody>
+      ${list.map((t) => { const c = (t.revs || []).filter((r) => r.kind === "client").length, i = (t.revs || []).length - c, n = (t.mistakes || []).length;
+        const late = t.delivered && t.due && t.delivered > t.due, overdue = !t.delivered && t.due && t.due < today() && t.status !== "cancelled";
+        return `<tr data-id="${esc(t.id)}" tabindex="0"><td><b>${esc(t.title || "Untitled")}</b>${t.type ? ` <span class="faint" style="font-size:12px">${esc(t.type)}</span>` : ""}</td><td>${esc(t.client) || '<span class="faint">—</span>'}</td>
+          <td>${esc(fmtDate(t.assigned)) || '<span class="faint">—</span>'}</td><td class="${overdue ? "late" : ""}">${esc(fmtDate(t.due)) || '<span class="faint">—</span>'}${overdue ? " · overdue" : ""}</td>
+          <td class="${late ? "late" : t.delivered && t.due ? "ontime" : ""}">${esc(fmtDate(t.delivered)) || '<span class="faint">—</span>'}${late ? " · late " + daysBetween(t.due, t.delivered) + "d" : ""}</td>
+          <td class="num">${t.videos || 1}</td><td class="num">${c ? `<span class="bad">${c}</span>` : 0}</td><td class="num">${i}</td><td class="num">${n ? `<span class="bad">${n}</span>` : 0}</td>
+          <td><span class="st ${esc(t.status)}">${esc(STATUS[t.status] || t.status)}</span></td></tr>`; }).join("")}</tbody></table></div>`
+      : `<div class="card empty"><b>${all().length ? "No tasks match" : "No tasks yet"}</b>${all().length ? "Try another search or filter." : "Add each video you edit, then log revisions and mistakes on it."}</div>`}`;
+  $("#tq").addEventListener("input", (e) => { ui.q = e.target.value; render(); });
+  $("#tst").addEventListener("change", (e) => { ui.st = e.target.value; render(); });
+  $("#tcl").addEventListener("change", (e) => { ui.client = e.target.value; render(); });
+  $("#tso").addEventListener("change", (e) => { ui.sort = e.target.value; render(); });
+  $("[data-new]", m).addEventListener("click", () => openTask());
+  $("#csv").addEventListener("click", exportCsv);
+  $$("tbody tr", m).forEach((r) => { r.addEventListener("click", () => openTask(r.dataset.id)); r.addEventListener("keydown", (e) => { if (e.key === "Enter") openTask(r.dataset.id); }); });
+}
+function exportCsv() {
+  const rows = [["Task", "Client", "Type", "Videos", "Given", "Due", "Delivered", "Status", "Client revisions", "Internal revisions", "Mistakes"]];
+  all().forEach((t) => { const c = (t.revs || []).filter((r) => r.kind === "client").length; rows.push([t.title, t.client, t.type, t.videos || 1, t.assigned, t.due, t.delivered, STATUS[t.status] || t.status, c, (t.revs || []).length - c, (t.mistakes || []).length]); });
+  const csv = rows.map((r) => r.map((v) => { v = String(v ?? ""); if (/^[=+\-@]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(",")).join("\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = APP_NAME + "-tasks.csv"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------- clients ---------- */
+function renderClients(m) {
+  const g = new Map(); all().forEach((t) => { const c = t.client || "No client"; (g.get(c) || g.set(c, []).get(c)).push(t); });
+  const rows = [...g.entries()].map(([c, l]) => ({ c, t: totals(l), last: l.map((x) => x.delivered || x.assigned).sort().pop() })).sort((a, b) => b.t.videos - a.t.videos);
+  m.innerHTML = `<div class="bar"><h1>Clients</h1></div>
+    <p class="muted" style="margin:-8px 0 0">Which clients ask for the most changes, and how you do with each of them.</p>
+    ${rows.length ? `<div class="tablewrap"><table><thead><tr><th>Client</th><th class="num">Videos</th><th class="num">Client rev. / video</th><th class="num">Mistakes / video</th><th class="num">On time</th><th class="num">Rating</th><th>Last task</th></tr></thead><tbody>
+      ${rows.map((r) => `<tr data-c="${esc(r.c)}" tabindex="0"><td><b>${esc(r.c)}</b></td><td class="num">${r.t.videos}</td><td class="num">${r.t.cRevPer != null ? r.t.cRevPer.toFixed(2) : "—"}</td><td class="num">${r.t.misPer != null ? r.t.misPer.toFixed(2) : "—"}</td>
+        <td class="num">${r.t.onTimePct != null ? r.t.onTimePct + "%" : "—"}</td><td class="num">${r.t.score != null ? fmtScore(r.t.score) : "—"}</td><td>${esc(fmtDate(r.last)) || "—"}</td></tr>`).join("")}</tbody></table></div>`
+      : `<div class="card empty"><b>No clients yet</b>Clients appear here once you add tasks.</div>`}`;
+  $$("tbody tr", m).forEach((r) => r.addEventListener("click", () => { ui.client = r.dataset.c === "No client" ? "" : r.dataset.c; view = "tasks"; render(); }));
+}
+
+/* ---------- task editor ---------- */
+let draft = null;
+function openTask(id) {
+  const t = id ? tasks.get(id) : null;
+  draft = JSON.parse(JSON.stringify(t || { id: uid(), title: "", client: "", type: "Reel", videos: 1, assigned: today(), due: "", delivered: "", status: "progress", link: "", notes: "", revs: [], mistakes: [], createdAt: new Date().toISOString() }));
+  draft._new = !t; drawTask(); $("#taskM").hidden = false; setTimeout(() => $("#tTitle").focus(), 30);
+}
+function closeTask() { $("#taskM").hidden = true; draft = null; }
+function drawTask() {
+  const t = draft, clients = [...new Set(all().map((x) => x.client).filter(Boolean))].sort(), c = t.revs.filter((r) => r.kind === "client").length;
+  $("#taskBox").innerHTML = `<button class="xbtn" data-close type="button" aria-label="Close">✕</button>
+    <h2 id="taskH">${t._new ? "New task" : "Edit task"}</h2>
+    <div class="fgrid">
+      <label class="f full">Task<input id="tTitle" value="${esc(t.title)}" maxlength="120" placeholder="e.g. Open house reel"></label>
+      <label class="f">Client<input id="tClient" value="${esc(t.client)}" maxlength="80" list="clList" placeholder="Client or brand name"></label><datalist id="clList">${clients.map((x) => `<option value="${esc(x)}">`).join("")}</datalist>
+      <label class="f">Type<select id="tType">${["Reel", "Short", "YouTube video", "Ad", "Podcast", "Wedding", "Corporate", "Other"].map((x) => `<option ${x === t.type ? "selected" : ""}>${x}</option>`).join("")}</select></label>
+      <label class="f">Given to you<input id="tAssigned" type="date" value="${esc(t.assigned)}"></label>
+      <label class="f">Due<input id="tDue" type="date" value="${esc(t.due)}"></label>
+      <label class="f">Delivered<input id="tDelivered" type="date" value="${esc(t.delivered)}"></label>
+      <label class="f">Status<select id="tStatus">${Object.entries(STATUS).map(([k, l]) => `<option value="${k}" ${k === t.status ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      <label class="f">Number of videos<input id="tVideos" type="number" min="1" max="99" value="${esc(t.videos || 1)}"></label>
+      <label class="f">Link (optional)<input id="tLink" value="${esc(t.link)}" inputmode="url" placeholder="Drive, YouTube…"></label>
+      <label class="f full">Notes<textarea id="tNotes" maxlength="2000" placeholder="Brief, feedback, anything to remember">${esc(t.notes)}</textarea></label>
+    </div>
+    <section class="logsec"><h3>Revisions <span class="cnt">${t.revs.length}</span></h3>
+      <div class="qadd"><button class="btn sm" data-rev="client" type="button">+ Client revision</button><button class="btn sm" data-rev="internal" type="button">+ Internal revision</button><input id="revNote" placeholder="What was asked? (optional)" maxlength="300" style="flex:1;min-width:180px;min-height:32px"></div>
+      ${t.revs.length ? `<div class="loglist">${t.revs.map((r) => `<div class="li"><span class="tg ${r.kind}">${r.kind === "client" ? "Client" : "Internal"}</span><span>${esc(r.note) || '<span class="faint">No note</span>'} <span class="faint" style="font-size:12px">· ${esc(fmtDate(r.at))}</span></span><button class="x" data-delrev="${esc(r.id)}" type="button" aria-label="Remove this revision">✕</button></div>`).join("")}</div>` : ""}
+    </section>
+    <section class="logsec"><h3>Mistakes <span class="cnt">${t.mistakes.length}</span></h3>
+      <form class="misform" id="misForm"><input id="mText" placeholder="What was the mistake? e.g. Caption overlaps the logo" maxlength="300" aria-label="Mistake">
+        <select id="mCat" aria-label="Category">${Object.entries(CATS).map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join("")}</select>
+        <input id="mTime" placeholder="Time 0:12" aria-label="Time in the video" inputmode="numeric">
+        <select id="mSrc" aria-label="Who found it"><option value="client">By client</option><option value="team">By team</option><option value="self">By me</option></select>
+        <button class="btn sm acc" type="submit">Add</button></form>
+      ${t.mistakes.length ? `<div class="loglist">${t.mistakes.map((x) => `<div class="li"><span class="mono" style="font-size:12px;color:var(--acc)">${x.t != null ? fmtTC(x.t) : "—"}</span><span><b style="font-weight:600">${esc(x.text)}</b> <span class="faint" style="font-size:12px">· ${esc(CATS[x.cat] || "Other")} · </span><span class="tg ${x.src}">${x.src === "client" ? "Client" : x.src === "team" ? "Team" : "Me"}</span></span><button class="x" data-delmis="${esc(x.id)}" type="button" aria-label="Remove this mistake">✕</button></div>`).join("")}</div>` : ""}
+    </section>
+    <div class="mfoot">${t._new ? "" : `<button class="btn ghost danger left" data-del type="button">Delete task</button>`}<button class="btn ghost" data-close type="button">Cancel</button><button class="btn acc" data-save type="button">${t._new ? "Add task" : "Save"}</button></div>`;
+}
+function readForm() {
+  const t = draft; if (!t) return;
+  t.title = $("#tTitle").value.trim(); t.client = $("#tClient").value.trim(); t.type = $("#tType").value; t.assigned = $("#tAssigned").value; t.due = $("#tDue").value;
+  t.delivered = $("#tDelivered").value; t.status = $("#tStatus").value; t.videos = Math.max(1, Math.min(99, Math.round(Number($("#tVideos").value) || 1))); t.link = $("#tLink").value.trim(); t.notes = $("#tNotes").value;
+}
+$("#taskBox").addEventListener("click", (e) => {
+  if (!draft) return;
+  if (e.target.closest("[data-close]")) { closeTask(); return; }
+  const rv = e.target.closest("[data-rev]");
+  if (rv) { readForm(); draft.revs.push({ id: uid(), kind: rv.dataset.rev, at: draft.delivered || today(), note: $("#revNote").value.trim() });
+    if (rv.dataset.rev === "client" && ["delivered", "approved"].includes(draft.status)) draft.status = "revision";
+    drawTask(); toast(rv.dataset.rev === "client" ? "Client revision added" : "Internal revision added"); return; }
+  const dr = e.target.closest("[data-delrev]"); if (dr) { readForm(); draft.revs = draft.revs.filter((r) => r.id !== dr.dataset.delrev); drawTask(); return; }
+  const dm = e.target.closest("[data-delmis]"); if (dm) { readForm(); draft.mistakes = draft.mistakes.filter((r) => r.id !== dm.dataset.delmis); drawTask(); return; }
+  const del = e.target.closest("[data-del]");
+  if (del) { if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Click again to delete"; setTimeout(() => { if (del.isConnected) { del.dataset.armed = ""; del.textContent = "Delete task"; } }, 3000); return; }
+    DB.remove(draft.id); closeTask(); toast("Task deleted"); return; }
+  if (e.target.closest("[data-save]")) {
+    readForm(); if (!draft.title) { toast("Give the task a name."); $("#tTitle").focus(); return; }
+    if (draft.delivered && draft.assigned && draft.delivered < draft.assigned) { toast("Delivered can't be before the date it was given."); $("#tDelivered").focus(); return; }
+    if (draft.delivered && draft.status === "progress") draft.status = "delivered";
+    const t = { ...draft }; delete t._new; DB.save(clean(t)); toast(draft._new ? "Task added" : "Saved"); closeTask();
+  }
+});
+$("#taskBox").addEventListener("submit", (e) => {
+  if (e.target.id !== "misForm") return; e.preventDefault(); readForm();
+  const text = $("#mText").value.trim(); if (!text) { $("#mText").focus(); return; }
+  const tc = parseTC($("#mTime").value);
+  draft.mistakes.push({ id: uid(), text, cat: $("#mCat").value, src: $("#mSrc").value, t: tc, at: draft.delivered || today() });
+  const keepCat = $("#mCat").value, keepSrc = $("#mSrc").value; drawTask(); $("#mCat").value = keepCat; $("#mSrc").value = keepSrc; $("#mText").focus();
+});
+$("#taskM").addEventListener("click", (e) => { if (e.target.id === "taskM") closeTask(); });
+addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!$("#acctM").hidden) $("#acctM").hidden = true; else if (!$("#taskM").hidden) closeTask(); else if (!$("#authM").hidden) closeAuth(); } });
+$("#newTop").addEventListener("click", () => openTask());
+
+/* ---------- accounts ---------- */
+function openAuth(tab) {
+  if (!configured) { toast("Accounts aren't switched on yet. Try the demo."); return; }
+  pane(tab || "in"); $("#authM").hidden = false; setTimeout(() => ($("#paneIn").hidden ? $("#upName") : $("#inEm")).focus(), 30);
+}
+function closeAuth() { $("#authM").hidden = true; }
+function pane(w) {
+  $("#paneIn").hidden = w !== "in"; $("#paneUp").hidden = w !== "up"; $("#paneVerify").hidden = w !== "verify"; $("#aTabs").hidden = w === "verify";
+  $("#authH").textContent = w === "up" ? "Create your account" : w === "verify" ? "Confirm your email" : "Welcome back";
+  $$("#aTabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.t === w))); $("#aErr").textContent = ""; $("#aOk").textContent = "";
+}
+$$("#aTabs button").forEach((b) => b.addEventListener("click", () => pane(b.dataset.t)));
+$("#authX").addEventListener("click", closeAuth);
+["#signInTop"].forEach((s) => $(s).addEventListener("click", () => openAuth("in")));
+["#signUpTop", "#ctaUp"].forEach((s) => $(s).addEventListener("click", () => openAuth("up")));
+const authMsg = (e) => ({ "auth/wrong-password": "Wrong email or password.", "auth/invalid-credential": "Wrong email or password.", "auth/user-not-found": "Wrong email or password.", "auth/email-already-in-use": "That email already has an account. Sign in instead.", "auth/invalid-email": "That email doesn't look right.", "auth/weak-password": "Pick a stronger password.", "auth/too-many-requests": "Too many tries. Wait a minute and try again.", "auth/popup-closed-by-user": "" }[e && e.code] ?? "Something went wrong. Try again.");
+$("#gBtn").addEventListener("click", async () => { $("#aErr").textContent = ""; try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } catch (e) { $("#aErr").textContent = authMsg(e); } });
+$("#inForm").addEventListener("submit", async (e) => { e.preventDefault(); $("#aErr").textContent = ""; try { await auth.signInWithEmailAndPassword($("#inEm").value.trim(), $("#inPw").value); } catch (er) { $("#aErr").textContent = authMsg(er); } });
+let pendingName = "";
+$("#paneUp").addEventListener("submit", async (e) => {
+  e.preventDefault(); $("#aErr").textContent = "";
+  if ($("#upPw").value.length < 8) { $("#aErr").textContent = "Use at least 8 characters for your password."; return; }
+  try { pendingName = $("#upName").value.trim();
+    const r = await auth.createUserWithEmailAndPassword($("#upEm").value.trim(), $("#upPw").value);
+    await r.user.updateProfile({ displayName: pendingName });
+    await r.user.sendEmailVerification({ url: location.href.split("#")[0] });
+    $("#vEmail").textContent = r.user.email; pane("verify");
+  } catch (er) { $("#aErr").textContent = authMsg(er); }
+});
+$("#vDone").addEventListener("click", async () => {
+  const u = auth.currentUser; if (!u) { pane("in"); return; }
+  await u.reload();
+  if (!auth.currentUser.emailVerified) { $("#aErr").textContent = "Not confirmed yet. Click the link in the email first (check Spam)."; return; }
+  await auth.currentUser.getIdToken(true); location.reload();
+});
+$("#vResend").addEventListener("click", async () => { try { await auth.currentUser.sendEmailVerification({ url: location.href.split("#")[0] }); $("#aOk").textContent = "Sent again. Check your inbox and Spam."; } catch (e) { $("#aErr").textContent = "Wait a minute before sending again."; } });
+$("#vOther").addEventListener("click", async () => { await auth.signOut(); pane("in"); });
+$("#forgot").addEventListener("click", async () => { const em = $("#inEm").value.trim(); if (!em) { $("#aErr").textContent = "Type your email above first."; $("#inEm").focus(); return; } try { await auth.sendPasswordResetEmail(em); } catch (e) {} $("#aErr").textContent = ""; $("#aOk").textContent = "If that email has an account, a reset link is on its way."; });
+$("#outBtn").addEventListener("click", async () => { if (demo) { exitDemo(); return; } await auth.signOut(); });
+
+/* ---------- account settings ---------- */
+$("#acGoal").innerHTML = ["3.0", "3.5", "4.0", "4.5"].map((g) => `<option value="${g}">${g} out of 5</option>`).join("");
+$("#acctBtn").addEventListener("click", () => { $("#acName").value = me.name || ""; $("#acGoal").value = String(Number(me.target || 3.5).toFixed(1)); $("#acctM").hidden = false; setTimeout(() => $("#acName").focus(), 30); });
+$("#acctM").addEventListener("click", (e) => { if (e.target.id === "acctM" || e.target.closest("[data-close]")) $("#acctM").hidden = true; });
+$("#acctForm").addEventListener("submit", (e) => {
+  e.preventDefault(); const name = $("#acName").value.trim().slice(0, 60) || me.name, target = Number($("#acGoal").value) || 3.5;
+  me = { ...me, name, target }; $("#meName").textContent = name; $("#meAv").textContent = initials(name); $("#acctM").hidden = true; render(); toast("Saved");
+  if (!demo) fs.collection("users").doc(me.uid).set({ name, target }, { merge: true }).catch(() => toast("Couldn't save. Check your connection."));
+});
+
+/* ---------- demo ---------- */
+function startDemo() {
+  demo = true; me = { uid: "demo", name: "Alex Rivera", target: 3.5 };
+  const saved = Local.load(); tasks = new Map((saved ? saved.tasks : sampleData()).map((t) => [t.id, t])); if (!saved) Local.saveAll();
+  $("#meName").textContent = me.name; $("#meAv").textContent = initials(me.name); view = "dash"; ui.month = curMonth(); render();
+}
+function exitDemo() { demo = false; me = null; tasks = new Map(); screen("landing"); }
+$("#ctaDemo").addEventListener("click", startDemo);
+$("#demoExit").addEventListener("click", exitDemo);
+$("#demoReset").addEventListener("click", () => { try { localStorage.removeItem(Local.key); } catch (e) {} startDemo(); toast("Sample data reset"); });
+
+/* ---------- signed in with a real account ---------- */
+if (auth) auth.onAuthStateChanged(async (u) => {
+  if (unsub) { unsub(); unsub = null; }
+  if (demo) return;
+  me = null; tasks = new Map();
+  if (!u) { screen("landing"); return; }
+  const pwd = (u.providerData || []).some((p) => p.providerId === "password");
+  if (pwd && !u.emailVerified) { $("#vEmail").textContent = u.email; pane("verify"); $("#authM").hidden = false; screen("landing"); return; }
+  closeAuth(); loadingMsg("Loading your tasks…");
+  const ref = fs.collection("users").doc(u.uid);
+  try {
+    const s = await ref.get();
+    if (s.exists) me = { uid: u.uid, ...s.data() };
+    else { me = { uid: u.uid, name: String(u.displayName || pendingName || (u.email || "").split("@")[0]).slice(0, 60), email: u.email || "", target: 3.5, createdAt: new Date().toISOString() }; await ref.set({ name: me.name, email: me.email, target: 3.5, createdAt: me.createdAt }); }
+  } catch (e) { me = null; screen("landing"); toast("Couldn't open your account. Check your connection."); return; }
+  $("#meName").textContent = me.name; $("#meAv").textContent = initials(me.name);
+  unsub = ref.collection("tasks").onSnapshot((snap) => { tasks = new Map(snap.docs.map((d) => [d.id, { ...d.data(), id: d.id }])); render(); }, () => toast("Lost connection. Refresh the page."));
+});
+else screen("landing");
+</script>
+</body>
+</html>
