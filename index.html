@@ -87,6 +87,7 @@ label.f { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var
 .gbtn svg { width: 18px; height: 18px; }
 
 /* ---------- app ---------- */
+main.app.wide { max-width: 1480px; }
 main.app { padding-block: 24px 70px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
 .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .bar h1 { margin: 0 auto 0 0; font: 900 30px/1.1 var(--display); letter-spacing: -.01em; text-wrap: balance; }
@@ -156,7 +157,7 @@ tr:last-child td { border-bottom: 0; }
 .tg.client { color: var(--cli); background: rgb(167 139 250 / .14); } .tg.internal, .tg.team { color: var(--int); background: rgb(251 191 36 / .14); } .tg.self { color: #60a5fa; background: rgb(96 165 250 / .14); }
 .li .x { border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 14px; width: 28px; height: 28px; border-radius: 7px; }
 .li .x:hover { color: var(--bad); background: rgb(255 93 93 / .1); }
-.misform { display: grid; grid-template-columns: minmax(0, 1fr) 140px 92px 110px auto; gap: 8px; }
+.misform { display: grid; grid-template-columns: minmax(0, 1fr) 140px 84px 104px auto auto; gap: 8px; align-items: center; }
 @media (max-width: 720px) { .misform { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .misform input:first-child { grid-column: 1 / -1; } }
 .mfoot { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: 14px; }
 .mfoot .left { margin-right: auto; }
@@ -178,6 +179,23 @@ tr:last-child td { border-bottom: 0; }
 .tour-foot { display: flex; align-items: center; gap: 8px; }
 .dots { display: flex; gap: 5px; margin-right: auto; } .dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); } .dots i.on { background: var(--acc); }
 @media (prefers-reduced-motion: reduce) { .tour-ring { transition: none; } }
+.tick { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); white-space: nowrap; cursor: pointer; }
+.tick input, .sheet input[type="checkbox"] { width: 17px; height: 17px; min-height: 0; padding: 0; accent-color: var(--acc); cursor: pointer; }
+.liticks { display: inline-flex; gap: 12px; margin-left: 8px; flex-wrap: wrap; }
+.sheet-sum { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13.5px; color: var(--muted); }
+.sheet-sum b { color: var(--fg); font-family: var(--mono); }
+table.sheet { min-width: 1300px; border-collapse: collapse; }
+table.sheet th, table.sheet td { border-right: 1px solid var(--line); padding: 0; }
+table.sheet th { padding: 9px 10px; position: sticky; top: 0; }
+table.sheet tbody tr { cursor: default; } table.sheet tbody tr:hover { background: none; }
+table.sheet td > input:not([type="checkbox"]), table.sheet td > select { width: 100%; min-height: 40px; border: 0; border-radius: 0; background: transparent; padding: 0 10px; font-size: 13.5px; }
+table.sheet td > input:not([type="checkbox"]):focus, table.sheet td > select:focus { outline: 2px solid var(--acc); outline-offset: -2px; background: var(--panel-2); }
+table.sheet td.ck, table.sheet th.ck { text-align: center; width: 92px; }
+table.sheet tr.is-mis td:first-child { box-shadow: inset 3px 0 0 var(--mis); }
+table.sheet tr.new { background: var(--acc-soft); }
+table.sheet .x { border: 0; background: none; color: var(--faint); cursor: pointer; width: 100%; min-height: 40px; font-size: 13px; }
+table.sheet .x:hover, table.sheet .x.armed { color: var(--bad); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; background: var(--fg); color: var(--bg); font-weight: 600; padding: 10px 16px; border-radius: 10px; transition: .2s; z-index: 80; pointer-events: none; max-width: calc(100vw - 32px); }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 .how { font-size: 13px; color: var(--muted); line-height: 1.65; }
@@ -192,7 +210,7 @@ tr:last-child td { border-bottom: 0; }
 <div class="demo-bar" id="demoBar" hidden><div class="wrap"><span>Demo mode: sample data, saved only in this browser.</span><button id="demoReset" type="button">Reset sample data</button><button id="demoExit" type="button">Exit demo</button></div></div>
 <header class="top"><div class="wrap">
   <a class="logo" href="#" id="logo" aria-label="EditScore home"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#ff5a1f"/><rect x="6" y="9" width="11" height="5" rx="1.5" fill="#fff"/><rect x="11" y="18" width="15" height="5" rx="1.5" fill="#fff" opacity=".6"/><path d="M19 8.5l2.4 2.4L26 6.3" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="appName">EditScore</span></a>
-  <nav class="nav" id="nav" hidden aria-label="Sections"><button type="button" data-v="dash" aria-current="page">Dashboard</button><button type="button" data-v="tasks">Tasks</button><button type="button" data-v="clients">Clients</button></nav>
+  <nav class="nav" id="nav" hidden aria-label="Sections"><button type="button" data-v="dash" aria-current="page">Dashboard</button><button type="button" data-v="tasks">Tasks</button><button type="button" data-v="clients">Clients</button><button type="button" data-v="sheet">Notes sheet</button></nav>
   <div class="me" id="meBox" hidden><span class="av" id="meAv"></span><span class="nm" id="meName"></span><button class="btn sm" id="newTop" type="button">+ Task</button><button class="btn sm ghost help" id="helpBtn" type="button" aria-label="How EditScore works" title="How it works">?</button><button class="btn sm ghost" id="acctBtn" type="button">Account</button><button class="btn sm ghost" id="outBtn" type="button">Sign out</button></div>
   <div class="me" id="guestBox"><button class="btn sm ghost" id="signInTop" type="button">Sign in</button><button class="btn sm acc" id="signUpTop" type="button">Create account</button></div>
 </div></header>
@@ -220,7 +238,7 @@ tr:last-child td { border-bottom: 0; }
   </div>
   <div class="wrap feat">
     <div><span class="n">01</span><h3>Log every task</h3><p>Client, type, assigned date, due date and delivery. See your on-time rate and how long edits take you.</p></div>
-    <div><span class="n">02</span><h3>Count revisions and mistakes</h3><p>One tap for a client or internal revision. Note each mistake with its category and the time in the video.</p></div>
+    <div><span class="n">02</span><h3>Count revisions and mistakes</h3><p>One tap for a client or internal revision. Keep every client note in a sheet and tick the ones that were really your mistake.</p></div>
     <div><span class="n">03</span><h3>Watch yourself improve</h3><p>A monthly rating, graphs of mistakes per video, your most common mistakes, and which clients ask for the most changes.</p></div>
   </div>
   <div class="wrap foot">© <span id="yr"></span> EditScore. All rights reserved.</div>
@@ -322,6 +340,8 @@ $("#yr").textContent = new Date().getFullYear();
 const W_CREV = 1.0, W_IREV = 0.5, W_MIS = 0.25;
 const CATS = { text: "Text & captions", spelling: "Spelling", audio: "Audio & music", color: "Color", cuts: "Cuts & timing", brand: "Brand & logo", motion: "Motion & graphics", export: "Export & format", brief: "Missed the brief", other: "Other" };
 const STATUS = { progress: "In progress", delivered: "Delivered", revision: "In revision", approved: "Approved", cancelled: "Cancelled" };
+// Client notes live in task.mistakes; only the ones ticked as "my mistake" count against the rating (older entries had no tick and were all mistakes).
+const isMis = (m) => m.mistake !== false;
 const score = (videos, cRev, iRev, mis) => (videos ? Math.max(1, Math.min(5, 5 - (cRev * W_CREV + iRev * W_IREV + mis * W_MIS) / videos)) : null);
 const fmtScore = (x) => (Math.floor(x * 10 + 1e-9) / 10).toFixed(1);
 const curMonth = () => today().slice(0, 7);
@@ -335,7 +355,7 @@ function totals(list) {
   const r = { tasks: list.length, videos: 0, cRev: 0, iRev: 0, mis: 0, onTime: 0, withDue: 0, turn: [], approved: 0, firstTime: 0, cats: {} };
   list.forEach((t) => {
     if (t.status === "cancelled") return;
-    const v = Math.max(1, Number(t.videos) || 1), revs = t.revs || [], mis = t.mistakes || [];
+    const v = Math.max(1, Number(t.videos) || 1), revs = t.revs || [], mis = (t.mistakes || []).filter(isMis);
     const c = revs.filter((x) => x.kind === "client").length;
     r.videos += v; r.cRev += c; r.iRev += revs.length - c; r.mis += mis.length;
     mis.forEach((m) => { r.cats[m.cat || "other"] = (r.cats[m.cat || "other"] || 0) + 1; });
@@ -364,8 +384,8 @@ const Local = {
   saveAll() { try { localStorage.setItem(this.key, JSON.stringify({ tasks: [...tasks.values()] })); } catch (e) {} },
 };
 const DB = {
-  save(t) {
-    t.updatedAt = new Date().toISOString(); tasks.set(t.id, t); render();
+  save(t, later) {
+    t.updatedAt = new Date().toISOString(); tasks.set(t.id, t); if (later) setTimeout(render, 0); else render();
     if (demo) { Local.saveAll(); return; }
     fs.collection("users").doc(me.uid).collection("tasks").doc(t.id).set(clean(t)).catch(() => toast("Couldn't save. Check your connection."));
   },
@@ -381,7 +401,7 @@ function clean(t) {
   return { id: t.id, title: s(t.title, 120), client: s(t.client, 80), type: s(t.type, 40), videos: Math.max(1, Math.min(99, Math.round(Number(t.videos) || 1))),
     assigned: d(t.assigned), due: d(t.due), delivered: d(t.delivered), status: STATUS[t.status] ? t.status : "progress", link: s(t.link, 500), notes: s(t.notes, 2000),
     revs: (t.revs || []).slice(0, 100).map((r) => ({ id: s(r.id, 30), kind: r.kind === "client" ? "client" : "internal", at: d(r.at), note: s(r.note, 300) })),
-    mistakes: (t.mistakes || []).slice(0, 200).map((m) => ({ id: s(m.id, 30), text: s(m.text, 300), cat: CATS[m.cat] ? m.cat : "other", src: ["client", "team", "self"].includes(m.src) ? m.src : "client", t: Number.isFinite(m.t) ? m.t : null, at: d(m.at) })),
+    mistakes: (t.mistakes || []).slice(0, 200).map((m) => ({ id: s(m.id, 30), text: s(m.text, 300), cat: CATS[m.cat] ? m.cat : "other", src: ["client", "team", "self"].includes(m.src) ? m.src : "client", t: Number.isFinite(m.t) ? m.t : null, at: d(m.at), mistake: m.mistake !== false, fixed: !!m.fixed })),
     createdAt: s(t.createdAt, 40), updatedAt: s(t.updatedAt, 40) };
 }
 
@@ -397,14 +417,15 @@ function sampleData() {
     const y = base.getFullYear(), m = base.getMonth(), n = 5 + Math.floor(rnd() * 3), quality = 1 - back * 0.18;     // older months have more problems
     for (let i = 0; i < n; i++) {
       const day = 2 + Math.floor(rnd() * 22), a = new Date(y, m, day), due = new Date(y, m, day + 3), late = rnd() < 0.25 + back * 0.05;
-      const del = new Date(y, m, day + (late ? 4 + Math.floor(rnd() * 2) : 1 + Math.floor(rnd() * 3)));
+      let del = new Date(y, m, day + (late ? 4 + Math.floor(rnd() * 2) : 1 + Math.floor(rnd() * 3))); if (del > new Date()) del = new Date();
       const iso = (x) => x.toLocaleDateString("en-CA");
       const isCurrent = back === 0 && i >= n - 2, revs = [], mistakes = [];
       const nc = Math.max(0, Math.round((rnd() * 2.2) * (1 - quality * 0.6))), ni = Math.max(0, Math.round(rnd() * 2 * (1.2 - quality * 0.7)));
       for (let k = 0; k < nc; k++) revs.push({ id: uid(), kind: "client", at: iso(del), note: "" });
       for (let k = 0; k < ni; k++) revs.push({ id: uid(), kind: "internal", at: iso(del), note: "" });
       const nm = Math.max(0, Math.round(rnd() * 3.2 * (1.25 - quality * 0.8)));
-      for (let k = 0; k < nm; k++) { const c = rnd() < 0.35 ? "text" : pick(cats); mistakes.push({ id: uid(), text: pick(mtext[c]), cat: c, src: pick(["client", "team", "self"]), t: Math.floor(rnd() * 50), at: iso(del) }); }
+      for (let k = 0; k < nm; k++) { const c = rnd() < 0.35 ? "text" : pick(cats); mistakes.push({ id: uid(), text: pick(mtext[c]), cat: c, src: pick(["client", "team", "self"]), t: Math.floor(rnd() * 50), at: iso(del), mistake: true, fixed: rnd() < 0.7 }); }
+      if (rnd() < 0.55) mistakes.push({ id: uid(), text: pick(["Try a warmer music track", "Can we add the website at the end?", "Make the intro a bit shorter", "Use the second take instead", "Add our Instagram handle"]), cat: pick(["audio", "cuts", "brand", "other"]), src: "client", t: Math.floor(rnd() * 50), at: iso(del), mistake: false, fixed: rnd() < 0.8 });
       out.push({ id: uid(), title: `${pick(["Spring promo", "Open house tour", "Menu launch", "Client testimonial", "Behind the scenes", "Product teaser", "Weekly tips", "New arrivals"])} ${pick(["reel", "cut", "edit", "short"])}`,
         client: pick(clients), type: pick(types), videos: rnd() < 0.2 ? 3 : 1, assigned: iso(a), due: iso(due), delivered: isCurrent ? "" : iso(del),
         status: isCurrent ? "progress" : rnd() < 0.15 ? "revision" : "approved", link: "", notes: "", revs: isCurrent ? [] : revs, mistakes: isCurrent ? [] : mistakes,
@@ -428,7 +449,8 @@ function render() {
   if (!me) return;
   $$("#nav button").forEach((b) => (b.dataset.v === view ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
   const a = document.activeElement, keep = a && a.id && $("#app").contains(a) ? { id: a.id, s: a.selectionStart, e: a.selectionEnd } : null;
-  ({ dash: renderDash, tasks: renderTasks, clients: renderClients }[view] || renderDash)($("#app"));
+  $("#app").classList.toggle("wide", view === "sheet");
+  ({ dash: renderDash, tasks: renderTasks, clients: renderClients, sheet: renderSheet }[view] || renderDash)($("#app"));
   if (keep) { const el = document.getElementById(keep.id); if (el) { el.focus(); try { el.setSelectionRange(keep.s, keep.e); } catch (e) {} } }
   screen("app");
 }
@@ -543,7 +565,7 @@ function renderTasks(m) {
       <select id="tso" aria-label="Sort"><option value="new" ${ui.sort === "new" ? "selected" : ""}>Newest first</option><option value="due" ${ui.sort === "due" ? "selected" : ""}>Due date</option></select>
       <button class="btn" id="csv" type="button">Export CSV</button><button class="btn acc" data-new type="button">+ Add task</button></div>
     ${list.length ? `<div class="tablewrap"><table><thead><tr><th>Task</th><th>Client</th><th>Given</th><th>Due</th><th>Delivered</th><th class="num">Videos</th><th class="num">Client rev.</th><th class="num">Internal rev.</th><th class="num">Mistakes</th><th>Status</th></tr></thead><tbody>
-      ${list.map((t) => { const c = (t.revs || []).filter((r) => r.kind === "client").length, i = (t.revs || []).length - c, n = (t.mistakes || []).length;
+      ${list.map((t) => { const c = (t.revs || []).filter((r) => r.kind === "client").length, i = (t.revs || []).length - c, n = (t.mistakes || []).filter(isMis).length;
         const late = t.delivered && t.due && t.delivered > t.due, overdue = !t.delivered && t.due && t.due < today() && t.status !== "cancelled";
         return `<tr data-id="${esc(t.id)}" tabindex="0"><td><b>${esc(t.title || "Untitled")}</b>${t.type ? ` <span class="faint" style="font-size:12px">${esc(t.type)}</span>` : ""}</td><td>${esc(t.client) || '<span class="faint">—</span>'}</td>
           <td>${esc(fmtDate(t.assigned)) || '<span class="faint">—</span>'}</td><td class="${overdue ? "late" : ""}">${esc(fmtDate(t.due)) || '<span class="faint">—</span>'}${overdue ? " · overdue" : ""}</td>
@@ -559,11 +581,90 @@ function renderTasks(m) {
   $("#csv").addEventListener("click", exportCsv);
   $$("tbody tr", m).forEach((r) => { r.addEventListener("click", () => openTask(r.dataset.id)); r.addEventListener("keydown", (e) => { if (e.key === "Enter") openTask(r.dataset.id); }); });
 }
+function downloadCsv(rows, name) {
+  const csv = rows.map((r) => r.map((v) => { v = String(v ?? ""); if (/^[=+\-@]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(",")).join("\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
 function exportCsv() {
   const rows = [["Task", "Client", "Type", "Videos", "Given", "Due", "Delivered", "Status", "Client revisions", "Internal revisions", "Mistakes"]];
-  all().forEach((t) => { const c = (t.revs || []).filter((r) => r.kind === "client").length; rows.push([t.title, t.client, t.type, t.videos || 1, t.assigned, t.due, t.delivered, STATUS[t.status] || t.status, c, (t.revs || []).length - c, (t.mistakes || []).length]); });
+  all().forEach((t) => { const c = (t.revs || []).filter((r) => r.kind === "client").length; rows.push([t.title, t.client, t.type, t.videos || 1, t.assigned, t.due, t.delivered, STATUS[t.status] || t.status, c, (t.revs || []).length - c, (t.mistakes || []).filter(isMis).length]); });
   const csv = rows.map((r) => r.map((v) => { v = String(v ?? ""); if (/^[=+\-@]/.test(v)) v = "'" + v; return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(",")).join("\n");
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = APP_NAME + "-tasks.csv"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------- notes sheet: one row per client note, filled in from the tasks, every cell editable ---------- */
+const sh = { month: "", client: "", only: "", q: "" };
+function sheetRows() {
+  const out = [];
+  all().forEach((t) => (t.mistakes || []).forEach((n) => out.push({ t, n, date: n.at || t.delivered || t.assigned || "" })));
+  return out.sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(a.t.title).localeCompare(String(b.t.title)) || (a.n.t ?? 1e9) - (b.n.t ?? 1e9));
+}
+function renderSheet(m) {
+  const rows = sheetRows(), q = sh.q.trim().toLowerCase();
+  const months = [...new Set(rows.map((r) => String(r.date).slice(0, 7)).filter(Boolean))].sort().reverse();
+  const clients = [...new Set(all().map((t) => t.client).filter(Boolean))].sort();
+  const list = rows.filter((r) => (!sh.month || String(r.date).startsWith(sh.month)) && (!sh.client || r.t.client === sh.client)
+    && (!sh.only || (sh.only === "mis" ? isMis(r.n) : sh.only === "notmis" ? !isMis(r.n) : !r.n.fixed))
+    && (!q || [r.n.text, r.t.title, r.t.client, CATS[r.n.cat]].join(" ").toLowerCase().includes(q)));
+  const nMis = list.filter((r) => isMis(r.n)).length, nFix = list.filter((r) => r.n.fixed).length;
+  const taskOpts = (cur) => all().sort((a, b) => String(b.assigned || b.createdAt).localeCompare(String(a.assigned || a.createdAt))).map((t) => `<option value="${esc(t.id)}" ${t.id === cur ? "selected" : ""}>${esc(t.title || "Untitled")}${t.client ? " · " + esc(t.client) : ""}</option>`).join("");
+  const cid = (r, f) => `c-${r.n.id}-${f}`;
+  m.innerHTML = `<div class="bar"><h1>Notes sheet</h1>
+      <input type="search" id="sq" placeholder="Search notes" value="${esc(sh.q)}" aria-label="Search notes" style="min-width:min(220px,100%)">
+      <select id="sMo" aria-label="Month"><option value="">All months</option>${months.map((k) => `<option value="${k}" ${k === sh.month ? "selected" : ""}>${esc(monthName(k))}</option>`).join("")}</select>
+      <select id="sCl" aria-label="Client"><option value="">All clients</option>${clients.map((c) => `<option ${c === sh.client ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
+      <select id="sOnly" aria-label="Show"><option value="">All notes</option><option value="mis" ${sh.only === "mis" ? "selected" : ""}>Only my mistakes</option><option value="notmis" ${sh.only === "notmis" ? "selected" : ""}>Only client changes</option><option value="open" ${sh.only === "open" ? "selected" : ""}>Not fixed yet</option></select>
+      <button class="btn" id="sCsv" type="button">Export CSV</button><button class="btn acc" id="sAdd" type="button">+ Add row</button></div>
+    <div class="sheet-sum"><span><b>${list.length}</b> note${list.length === 1 ? "" : "s"}</span><span><b class="bad">${nMis}</b> my mistake${nMis === 1 ? "" : "s"}${list.length ? ` (${Math.round((nMis / list.length) * 100)}%)` : ""}</span><span><b class="ontime">${nFix}</b> fixed</span><span class="faint">Rows fill in from your tasks. Click any cell to change it.</span></div>
+    ${list.length ? `<div class="tablewrap"><table class="sheet"><thead><tr><th style="width:138px">Date</th><th style="width:150px">Client</th><th style="width:200px">Task</th><th style="width:74px">Time</th><th style="min-width:340px">Client note</th><th class="ck">My mistake</th><th class="ck">Fixed</th><th style="width:150px">Category</th><th style="width:112px">From</th><th style="width:40px"><span class="sr">Delete</span></th></tr></thead><tbody>
+      ${list.map((r) => `<tr data-t="${esc(r.t.id)}" data-n="${esc(r.n.id)}" class="${isMis(r.n) ? "is-mis" : ""}">
+        <td><input type="date" id="${cid(r, "at")}" data-f="at" value="${esc(r.n.at || "")}" aria-label="Date"></td>
+        <td><input id="${cid(r, "client")}" data-f="client" value="${esc(r.t.client)}" list="clList2" aria-label="Client" title="Changes the client of the whole task"></td>
+        <td><select id="${cid(r, "task")}" data-f="task" aria-label="Task">${taskOpts(r.t.id)}</select></td>
+        <td><input id="${cid(r, "t")}" data-f="t" value="${r.n.t != null ? fmtTC(r.n.t) : ""}" placeholder="0:00" aria-label="Time in the video" class="mono"></td>
+        <td><input id="${cid(r, "text")}" data-f="text" value="${esc(r.n.text)}" maxlength="300" aria-label="Client note"></td>
+        <td class="ck"><input type="checkbox" id="${cid(r, "mistake")}" data-f="mistake" ${isMis(r.n) ? "checked" : ""} aria-label="My mistake"></td>
+        <td class="ck"><input type="checkbox" id="${cid(r, "fixed")}" data-f="fixed" ${r.n.fixed ? "checked" : ""} aria-label="Fixed"></td>
+        <td><select id="${cid(r, "cat")}" data-f="cat" aria-label="Category">${Object.entries(CATS).map(([k, l]) => `<option value="${k}" ${k === r.n.cat ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></td>
+        <td><select id="${cid(r, "src")}" data-f="src" aria-label="Who gave the note"><option value="client" ${r.n.src === "client" ? "selected" : ""}>Client</option><option value="team" ${r.n.src === "team" ? "selected" : ""}>Team</option><option value="self" ${r.n.src === "self" ? "selected" : ""}>Me</option></select></td>
+        <td><button class="x" data-sdel type="button" aria-label="Delete this row">✕</button></td></tr>`).join("")}</tbody></table></div><datalist id="clList2">${clients.map((c) => `<option value="${esc(c)}">`).join("")}</datalist>`
+      : `<div class="card empty"><b>${rows.length ? "No notes match" : "No client notes yet"}</b>${rows.length ? "Try another filter." : all().length ? "Add notes inside a task, or press + Add row." : "Add a task first, then its client notes show up here."}</div>`}
+    <p class="how"><b>How it works:</b> every note you add to a task shows up here, and so does every revision you add with a note. Only rows ticked <b>My mistake</b> lower your rating; the others are changes the client wanted. Editing a cell here changes the task too.</p>`;
+  $("#sq").addEventListener("input", (e) => { sh.q = e.target.value; render(); });
+  $("#sMo").addEventListener("change", (e) => { sh.month = e.target.value; render(); });
+  $("#sCl").addEventListener("change", (e) => { sh.client = e.target.value; render(); });
+  $("#sOnly").addEventListener("change", (e) => { sh.only = e.target.value; render(); });
+  $("#sCsv").addEventListener("click", () => downloadCsv([["Date", "Client", "Task", "Time", "Client note", "Category", "From", "My mistake", "Fixed"], ...list.map((r) => [r.n.at, r.t.client, r.t.title, r.n.t != null ? fmtTC(r.n.t) : "", r.n.text, CATS[r.n.cat] || "Other", { client: "Client", team: "Team", self: "Me" }[r.n.src], isMis(r.n) ? "Yes" : "No", r.n.fixed ? "Yes" : "No"])], APP_NAME + "-notes.csv"));
+  $("#sAdd").addEventListener("click", () => {
+    const pool = all().filter((t) => (!sh.client || t.client === sh.client)).sort((a, b) => String(b.assigned || b.createdAt).localeCompare(String(a.assigned || a.createdAt)));
+    const t = pool[0]; if (!t) { toast("Add a task first."); return; }
+    const n = { id: uid(), text: "", cat: "other", src: "client", t: null, at: today(), mistake: false, fixed: false };
+    const nt = JSON.parse(JSON.stringify(t)); nt.mistakes = [...(nt.mistakes || []), n]; sh.q = ""; sh.month = ""; sh.only = "";
+    DB.save(clean(nt)); setTimeout(() => { const el = document.getElementById(`c-${n.id}-text`); if (el) { el.focus(); el.closest("tr").classList.add("new"); } }, 20);
+    toast("Row added to “" + (t.title || "Untitled") + "”. Change the task in the row if needed.");
+  });
+  const tb = $("tbody", m); if (!tb) return;
+  tb.addEventListener("change", (e) => {
+    const f = e.target.dataset.f, tr = e.target.closest("tr"); if (!f || !tr) return;
+    const t = tasks.get(tr.dataset.t); if (!t) return;
+    const nt = JSON.parse(JSON.stringify(t)), n = (nt.mistakes || []).find((x) => x.id === tr.dataset.n); if (!n) return;
+    const v = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    if (f === "client") { nt.client = String(v).trim(); DB.save(clean(nt), true); toast("Client changed for the whole task"); return; }
+    if (f === "task") {                                   // move the note to another task
+      const to = tasks.get(v); if (!to || to.id === t.id) return;
+      nt.mistakes = nt.mistakes.filter((x) => x.id !== n.id); const nt2 = JSON.parse(JSON.stringify(to)); nt2.mistakes = [...(nt2.mistakes || []), n];
+      DB.save(clean(nt)); DB.save(clean(nt2), true); toast("Moved to “" + (to.title || "Untitled") + "”"); return;
+    }
+    if (f === "t") { const tc = parseTC(v); if (String(v).trim() && tc == null) { toast("Write the time like 1:05"); e.target.value = n.t != null ? fmtTC(n.t) : ""; return; } n.t = tc; }
+    else if (f === "text") { n.text = String(v).trim().slice(0, 300); }
+    else n[f] = v;
+    DB.save(clean(nt), true);
+  });
+  tb.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-sdel]"); if (!b) return; const tr = b.closest("tr");
+    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Delete?"; b.classList.add("armed"); setTimeout(() => { if (b.isConnected) { b.dataset.armed = ""; b.textContent = "✕"; b.classList.remove("armed"); } }, 3000); return; }
+    const t = tasks.get(tr.dataset.t); if (!t) return; const nt = JSON.parse(JSON.stringify(t)); nt.mistakes = (nt.mistakes || []).filter((x) => x.id !== tr.dataset.n); DB.save(clean(nt)); toast("Row deleted");
+  });
 }
 
 /* ---------- clients ---------- */
@@ -607,13 +708,16 @@ function drawTask() {
       <div class="qadd"><button class="btn sm" data-rev="client" type="button">+ Client revision</button><button class="btn sm" data-rev="internal" type="button">+ Internal revision</button><input id="revNote" placeholder="What was asked? (optional)" maxlength="300" style="flex:1;min-width:180px;min-height:32px"></div>
       ${t.revs.length ? `<div class="loglist">${t.revs.map((r) => `<div class="li"><span class="tg ${r.kind}">${r.kind === "client" ? "Client" : "Internal"}</span><span>${esc(r.note) || '<span class="faint">No note</span>'} <span class="faint" style="font-size:12px">· ${esc(fmtDate(r.at))}</span></span><button class="x" data-delrev="${esc(r.id)}" type="button" aria-label="Remove this revision">✕</button></div>`).join("")}</div>` : ""}
     </section>
-    <section class="logsec"><h3>Mistakes <span class="cnt">${t.mistakes.length}</span></h3>
-      <form class="misform" id="misForm"><input id="mText" placeholder="What was the mistake? e.g. Caption overlaps the logo" maxlength="300" aria-label="Mistake">
+    <section class="logsec"><h3>Client notes &amp; mistakes <span class="cnt">${t.mistakes.length} notes · ${t.mistakes.filter(isMis).length} mistakes</span></h3>
+      <p class="faint" style="margin:-4px 0 0;font-size:12.5px">Write down each note you got. Tick <b>My mistake</b> only when it was your error, not just a change the client wanted.</p>
+      <form class="misform" id="misForm"><input id="mText" placeholder="The note, e.g. Caption overlaps the logo" maxlength="300" aria-label="Client note">
         <select id="mCat" aria-label="Category">${Object.entries(CATS).map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join("")}</select>
         <input id="mTime" placeholder="Time 0:12" aria-label="Time in the video" inputmode="numeric">
         <select id="mSrc" aria-label="Who found it"><option value="client">By client</option><option value="team">By team</option><option value="self">By me</option></select>
+        <label class="tick"><input type="checkbox" id="mMis"> My mistake</label>
         <button class="btn sm acc" type="submit">Add</button></form>
-      ${t.mistakes.length ? `<div class="loglist">${t.mistakes.map((x) => `<div class="li"><span class="mono" style="font-size:12px;color:var(--acc)">${x.t != null ? fmtTC(x.t) : "—"}</span><span><b style="font-weight:600">${esc(x.text)}</b> <span class="faint" style="font-size:12px">· ${esc(CATS[x.cat] || "Other")} · </span><span class="tg ${x.src}">${x.src === "client" ? "Client" : x.src === "team" ? "Team" : "Me"}</span></span><button class="x" data-delmis="${esc(x.id)}" type="button" aria-label="Remove this mistake">✕</button></div>`).join("")}</div>` : ""}
+      ${t.mistakes.length ? `<div class="loglist">${t.mistakes.map((x) => `<div class="li"><span class="mono" style="font-size:12px;color:var(--acc)">${x.t != null ? fmtTC(x.t) : "—"}</span><span><b style="font-weight:600">${esc(x.text)}</b> <span class="faint" style="font-size:12px">· ${esc(CATS[x.cat] || "Other")} · </span><span class="tg ${x.src}">${x.src === "client" ? "Client" : x.src === "team" ? "Team" : "Me"}</span>
+        <span class="liticks"><label class="tick"><input type="checkbox" data-nmis="${esc(x.id)}" ${isMis(x) ? "checked" : ""}> Mistake</label><label class="tick"><input type="checkbox" data-nfix="${esc(x.id)}" ${x.fixed ? "checked" : ""}> Fixed</label></span></span><button class="x" data-delmis="${esc(x.id)}" type="button" aria-label="Remove this note">✕</button></div>`).join("")}</div>` : ""}
     </section>
     <div class="mfoot">${t._new ? "" : `<button class="btn ghost danger left" data-del type="button">Delete task</button>`}<button class="btn ghost" data-close type="button">Cancel</button><button class="btn acc" data-save type="button">${t._new ? "Add task" : "Save"}</button></div>`;
 }
@@ -626,7 +730,8 @@ $("#taskBox").addEventListener("click", (e) => {
   if (!draft) return;
   if (e.target.closest("[data-close]")) { closeTask(); return; }
   const rv = e.target.closest("[data-rev]");
-  if (rv) { readForm(); draft.revs.push({ id: uid(), kind: rv.dataset.rev, at: draft.delivered || today(), note: $("#revNote").value.trim() });
+  if (rv) { readForm(); const rn = $("#revNote").value.trim(); draft.revs.push({ id: uid(), kind: rv.dataset.rev, at: draft.delivered || today(), note: rn });
+    if (rn) draft.mistakes.push({ id: uid(), text: rn, cat: "other", src: rv.dataset.rev === "client" ? "client" : "team", t: null, at: draft.delivered || today(), mistake: false, fixed: false });
     if (rv.dataset.rev === "client" && ["delivered", "approved"].includes(draft.status)) draft.status = "revision";
     drawTask(); toast(rv.dataset.rev === "client" ? "Client revision added" : "Internal revision added"); return; }
   const dr = e.target.closest("[data-delrev]"); if (dr) { readForm(); draft.revs = draft.revs.filter((r) => r.id !== dr.dataset.delrev); drawTask(); return; }
@@ -641,11 +746,16 @@ $("#taskBox").addEventListener("click", (e) => {
     const t = { ...draft }; delete t._new; DB.save(clean(t)); toast(draft._new ? "Task added" : "Saved"); closeTask();
   }
 });
+$("#taskBox").addEventListener("change", (e) => {
+  const m = e.target.closest("[data-nmis], [data-nfix]"); if (!m || !draft) return; readForm();
+  const n = draft.mistakes.find((x) => x.id === (m.dataset.nmis || m.dataset.nfix)); if (!n) return;
+  if (m.dataset.nmis) n.mistake = m.checked; else n.fixed = m.checked; drawTask();
+});
 $("#taskBox").addEventListener("submit", (e) => {
   if (e.target.id !== "misForm") return; e.preventDefault(); readForm();
   const text = $("#mText").value.trim(); if (!text) { $("#mText").focus(); return; }
   const tc = parseTC($("#mTime").value);
-  draft.mistakes.push({ id: uid(), text, cat: $("#mCat").value, src: $("#mSrc").value, t: tc, at: draft.delivered || today() });
+  draft.mistakes.push({ id: uid(), text, cat: $("#mCat").value, src: $("#mSrc").value, t: tc, at: draft.delivered || today(), mistake: $("#mMis").checked, fixed: false });
   const keepCat = $("#mCat").value, keepSrc = $("#mSrc").value; drawTask(); $("#mCat").value = keepCat; $("#mSrc").value = keepSrc; $("#mText").focus();
 });
 $("#taskM").addEventListener("click", (e) => { if (e.target.id === "taskM") closeTask(); });
@@ -708,7 +818,8 @@ const TOUR = [
   { el: '#nav [data-v="tasks"]', t: "3. All your tasks", d: "<b>Tasks</b> lists everything you've logged. Search by name, client or mistake, filter by status, and export to a spreadsheet. Late deliveries show in red." },
   { el: '#nav [data-v="dash"]', t: "4. Your rating and progress", d: "The <b>Dashboard</b> gives you a rating out of 5 for each month, tells you if you're getting better than last month, and shows graphs of your mistakes and revisions, plus your most common mistakes." },
   { el: '#nav [data-v="clients"]', t: "5. Your clients", d: "<b>Clients</b> shows which clients ask for the most changes, and how you do with each one." },
-  { el: "#acctBtn", t: "6. Set your goal", d: "In <b>Account</b>, change your name and pick a goal rating. Your goal shows as a line on the rating graph." },
+  { el: '#nav [data-v="sheet"]', t: "6. Your notes sheet", d: "<b>Notes sheet</b> is like an Excel sheet of every client note, filled in from your tasks. Tick the ones that were <b>your mistake</b> and the ones you've <b>fixed</b>. Every cell can be edited if something filled in wrong, and you can add rows." },
+  { el: "#acctBtn", t: "7. Set your goal", d: "In <b>Account</b>, change your name and pick a goal rating. Your goal shows as a line on the rating graph." },
   { el: "#helpBtn", t: "Need this again?", d: "Click <b>?</b> any time to replay this tour." },
 ];
 let ti = 0, tSteps = [];
