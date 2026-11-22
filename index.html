@@ -195,6 +195,19 @@ table.sheet tr.is-mis td:first-child { box-shadow: inset 3px 0 0 var(--mis); }
 table.sheet tr.new { background: var(--acc-soft); }
 table.sheet .x { border: 0; background: none; color: var(--faint); cursor: pointer; width: 100%; min-height: 40px; font-size: 13px; }
 table.sheet .x:hover, table.sheet .x.armed { color: var(--bad); }
+table.sheet.tree { min-width: 720px; }
+table.sheet.tree tr.nrow td:first-child input { padding-left: 34px; }
+table.sheet.tree tr.grp td { background: var(--panel); border-bottom: 1px solid var(--line); }
+table.sheet.tree tr.g0 td { background: var(--panel-2); }
+.gbtn2 { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; border: 0; background: none; color: var(--fg); font: inherit; font-size: 14px; text-align: left; cursor: pointer; padding: 0 6px; flex-wrap: wrap; }
+.g0 .gbtn2 { font-size: 15px; } .g2 .gbtn2 { font-size: 13.5px; color: var(--muted); }
+.gbtn2 .car { display: inline-block; width: 14px; color: var(--acc); transition: transform .15s; }
+.gbtn2[aria-expanded="true"] .car { transform: rotate(90deg); }
+.gcnt { margin-left: auto; font-size: 12.5px; color: var(--muted); white-space: nowrap; } .gcnt b { color: var(--bad); }
+tr.addrow td { border-bottom: 1px solid var(--line); padding-block: 4px !important; }
+.tg.sub { color: var(--acc); background: var(--acc-soft); }
+.li.sub { grid-template-columns: auto minmax(0, 1fr) auto; } .li.sub .subname { min-height: 32px; }
+@media (prefers-reduced-motion: reduce) { .gbtn2 .car { transition: none; } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 .toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; background: var(--fg); color: var(--bg); font-weight: 600; padding: 10px 16px; border-radius: 10px; transition: .2s; z-index: 80; pointer-events: none; max-width: calc(100vw - 32px); }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
@@ -400,8 +413,9 @@ function clean(t) {
   const s = (v, n) => String(v || "").slice(0, n), d = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(v || "") ? v : "");
   return { id: t.id, title: s(t.title, 120), client: s(t.client, 80), type: s(t.type, 40), videos: Math.max(1, Math.min(99, Math.round(Number(t.videos) || 1))),
     assigned: d(t.assigned), due: d(t.due), delivered: d(t.delivered), status: STATUS[t.status] ? t.status : "progress", link: s(t.link, 500), notes: s(t.notes, 2000),
+    subtasks: (t.subtasks || []).slice(0, 50).map((x) => ({ id: s(x.id, 30), title: s(x.title, 120), done: !!x.done })),
     revs: (t.revs || []).slice(0, 100).map((r) => ({ id: s(r.id, 30), kind: r.kind === "client" ? "client" : "internal", at: d(r.at), note: s(r.note, 300) })),
-    mistakes: (t.mistakes || []).slice(0, 200).map((m) => ({ id: s(m.id, 30), text: s(m.text, 300), cat: CATS[m.cat] ? m.cat : "other", src: ["client", "team", "self"].includes(m.src) ? m.src : "client", t: Number.isFinite(m.t) ? m.t : null, at: d(m.at), mistake: m.mistake !== false, fixed: !!m.fixed })),
+    mistakes: (t.mistakes || []).slice(0, 200).map((m) => ({ id: s(m.id, 30), text: s(m.text, 300), cat: CATS[m.cat] ? m.cat : "other", src: ["client", "team", "self"].includes(m.src) ? m.src : "client", t: Number.isFinite(m.t) ? m.t : null, at: d(m.at), mistake: m.mistake !== false, fixed: !!m.fixed, sub: (t.subtasks || []).some((x) => x.id === m.sub) ? s(m.sub, 30) : "" })),
     createdAt: s(t.createdAt, 40), updatedAt: s(t.updatedAt, 40) };
 }
 
@@ -432,6 +446,9 @@ function sampleData() {
         createdAt: new Date(a).toISOString(), updatedAt: new Date(a).toISOString() });
     }
   }
+  // batches of 3 videos get subtasks, and their notes are spread across them
+  out.forEach((t) => { if (t.videos !== 3) return; t.subtasks = [1, 2, 3].map((n) => ({ id: uid(), title: "Reel " + n, done: t.status === "approved" || rnd() < 0.5 }));
+    t.mistakes.forEach((n) => { n.sub = rnd() < 0.8 ? pick(t.subtasks).id : ""; }); });
   return out;
 }
 
@@ -567,7 +584,7 @@ function renderTasks(m) {
     ${list.length ? `<div class="tablewrap"><table><thead><tr><th>Task</th><th>Client</th><th>Given</th><th>Due</th><th>Delivered</th><th class="num">Videos</th><th class="num">Client rev.</th><th class="num">Internal rev.</th><th class="num">Mistakes</th><th>Status</th></tr></thead><tbody>
       ${list.map((t) => { const c = (t.revs || []).filter((r) => r.kind === "client").length, i = (t.revs || []).length - c, n = (t.mistakes || []).filter(isMis).length;
         const late = t.delivered && t.due && t.delivered > t.due, overdue = !t.delivered && t.due && t.due < today() && t.status !== "cancelled";
-        return `<tr data-id="${esc(t.id)}" tabindex="0"><td><b>${esc(t.title || "Untitled")}</b>${t.type ? ` <span class="faint" style="font-size:12px">${esc(t.type)}</span>` : ""}</td><td>${esc(t.client) || '<span class="faint">—</span>'}</td>
+        return `<tr data-id="${esc(t.id)}" tabindex="0"><td><b>${esc(t.title || "Untitled")}</b>${t.type ? ` <span class="faint" style="font-size:12px">${esc(t.type)}</span>` : ""}${(t.subtasks || []).length ? ` <span class="tg sub">${(t.subtasks || []).filter((x) => x.done).length}/${t.subtasks.length} subtasks</span>` : ""}</td><td>${esc(t.client) || '<span class="faint">—</span>'}</td>
           <td>${esc(fmtDate(t.assigned)) || '<span class="faint">—</span>'}</td><td class="${overdue ? "late" : ""}">${esc(fmtDate(t.due)) || '<span class="faint">—</span>'}${overdue ? " · overdue" : ""}</td>
           <td class="${late ? "late" : t.delivered && t.due ? "ontime" : ""}">${esc(fmtDate(t.delivered)) || '<span class="faint">—</span>'}${late ? " · late " + daysBetween(t.due, t.delivered) + "d" : ""}</td>
           <td class="num">${t.videos || 1}</td><td class="num">${c ? `<span class="bad">${c}</span>` : 0}</td><td class="num">${i}</td><td class="num">${n ? `<span class="bad">${n}</span>` : 0}</td>
@@ -592,78 +609,78 @@ function exportCsv() {
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = APP_NAME + "-tasks.csv"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
-/* ---------- notes sheet: one row per client note, filled in from the tasks, every cell editable ---------- */
-const sh = { month: "", client: "", only: "", q: "" };
-function sheetRows() {
-  const out = [];
-  all().forEach((t) => (t.mistakes || []).forEach((n) => out.push({ t, n, date: n.at || t.delivered || t.assigned || "" })));
-  return out.sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(a.t.title).localeCompare(String(b.t.title)) || (a.n.t ?? 1e9) - (b.n.t ?? 1e9));
-}
+/* ---------- notes sheet: client ▸ task ▸ subtask ▸ notes, filled in from the tasks, every cell editable ---------- */
+const sh = { q: "", only: "", open: new Set() };          // open: which client / task / subtask groups are expanded
 function renderSheet(m) {
-  const rows = sheetRows(), q = sh.q.trim().toLowerCase();
-  const months = [...new Set(rows.map((r) => String(r.date).slice(0, 7)).filter(Boolean))].sort().reverse();
-  const clients = [...new Set(all().map((t) => t.client).filter(Boolean))].sort();
-  const list = rows.filter((r) => (!sh.month || String(r.date).startsWith(sh.month)) && (!sh.client || r.t.client === sh.client)
-    && (!sh.only || (sh.only === "mis" ? isMis(r.n) : sh.only === "notmis" ? !isMis(r.n) : !r.n.fixed))
-    && (!q || [r.n.text, r.t.title, r.t.client, CATS[r.n.cat]].join(" ").toLowerCase().includes(q)));
-  const nMis = list.filter((r) => isMis(r.n)).length, nFix = list.filter((r) => r.n.fixed).length;
-  const taskOpts = (cur) => all().sort((a, b) => String(b.assigned || b.createdAt).localeCompare(String(a.assigned || a.createdAt))).map((t) => `<option value="${esc(t.id)}" ${t.id === cur ? "selected" : ""}>${esc(t.title || "Untitled")}${t.client ? " · " + esc(t.client) : ""}</option>`).join("");
-  const cid = (r, f) => `c-${r.n.id}-${f}`;
-  m.innerHTML = `<div class="bar"><h1>Notes sheet</h1>
-      <input type="search" id="sq" placeholder="Search notes" value="${esc(sh.q)}" aria-label="Search notes" style="min-width:min(220px,100%)">
-      <select id="sMo" aria-label="Month"><option value="">All months</option>${months.map((k) => `<option value="${k}" ${k === sh.month ? "selected" : ""}>${esc(monthName(k))}</option>`).join("")}</select>
-      <select id="sCl" aria-label="Client"><option value="">All clients</option>${clients.map((c) => `<option ${c === sh.client ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
-      <select id="sOnly" aria-label="Show"><option value="">All notes</option><option value="mis" ${sh.only === "mis" ? "selected" : ""}>Only my mistakes</option><option value="notmis" ${sh.only === "notmis" ? "selected" : ""}>Only client changes</option><option value="open" ${sh.only === "open" ? "selected" : ""}>Not fixed yet</option></select>
-      <button class="btn" id="sCsv" type="button">Export CSV</button><button class="btn acc" id="sAdd" type="button">+ Add row</button></div>
-    <div class="sheet-sum"><span><b>${list.length}</b> note${list.length === 1 ? "" : "s"}</span><span><b class="bad">${nMis}</b> my mistake${nMis === 1 ? "" : "s"}${list.length ? ` (${Math.round((nMis / list.length) * 100)}%)` : ""}</span><span><b class="ontime">${nFix}</b> fixed</span><span class="faint">Rows fill in from your tasks. Click any cell to change it.</span></div>
-    ${list.length ? `<div class="tablewrap"><table class="sheet"><thead><tr><th style="width:138px">Date</th><th style="width:150px">Client</th><th style="width:200px">Task</th><th style="width:74px">Time</th><th style="min-width:340px">Client note</th><th class="ck">My mistake</th><th class="ck">Fixed</th><th style="width:150px">Category</th><th style="width:112px">From</th><th style="width:40px"><span class="sr">Delete</span></th></tr></thead><tbody>
-      ${list.map((r) => `<tr data-t="${esc(r.t.id)}" data-n="${esc(r.n.id)}" class="${isMis(r.n) ? "is-mis" : ""}">
-        <td><input type="date" id="${cid(r, "at")}" data-f="at" value="${esc(r.n.at || "")}" aria-label="Date"></td>
-        <td><input id="${cid(r, "client")}" data-f="client" value="${esc(r.t.client)}" list="clList2" aria-label="Client" title="Changes the client of the whole task"></td>
-        <td><select id="${cid(r, "task")}" data-f="task" aria-label="Task">${taskOpts(r.t.id)}</select></td>
-        <td><input id="${cid(r, "t")}" data-f="t" value="${r.n.t != null ? fmtTC(r.n.t) : ""}" placeholder="0:00" aria-label="Time in the video" class="mono"></td>
-        <td><input id="${cid(r, "text")}" data-f="text" value="${esc(r.n.text)}" maxlength="300" aria-label="Client note"></td>
-        <td class="ck"><input type="checkbox" id="${cid(r, "mistake")}" data-f="mistake" ${isMis(r.n) ? "checked" : ""} aria-label="My mistake"></td>
-        <td class="ck"><input type="checkbox" id="${cid(r, "fixed")}" data-f="fixed" ${r.n.fixed ? "checked" : ""} aria-label="Fixed"></td>
-        <td><select id="${cid(r, "cat")}" data-f="cat" aria-label="Category">${Object.entries(CATS).map(([k, l]) => `<option value="${k}" ${k === r.n.cat ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></td>
-        <td><select id="${cid(r, "src")}" data-f="src" aria-label="Who gave the note"><option value="client" ${r.n.src === "client" ? "selected" : ""}>Client</option><option value="team" ${r.n.src === "team" ? "selected" : ""}>Team</option><option value="self" ${r.n.src === "self" ? "selected" : ""}>Me</option></select></td>
-        <td><button class="x" data-sdel type="button" aria-label="Delete this row">✕</button></td></tr>`).join("")}</tbody></table></div><datalist id="clList2">${clients.map((c) => `<option value="${esc(c)}">`).join("")}</datalist>`
-      : `<div class="card empty"><b>${rows.length ? "No notes match" : "No client notes yet"}</b>${rows.length ? "Try another filter." : all().length ? "Add notes inside a task, or press + Add row." : "Add a task first, then its client notes show up here."}</div>`}
-    <p class="how"><b>How it works:</b> every note you add to a task shows up here, and so does every revision you add with a note. Only rows ticked <b>My mistake</b> lower your rating; the others are changes the client wanted. Editing a cell here changes the task too.</p>`;
-  $("#sq").addEventListener("input", (e) => { sh.q = e.target.value; render(); });
-  $("#sMo").addEventListener("change", (e) => { sh.month = e.target.value; render(); });
-  $("#sCl").addEventListener("change", (e) => { sh.client = e.target.value; render(); });
-  $("#sOnly").addEventListener("change", (e) => { sh.only = e.target.value; render(); });
-  $("#sCsv").addEventListener("click", () => downloadCsv([["Date", "Client", "Task", "Time", "Client note", "Category", "From", "My mistake", "Fixed"], ...list.map((r) => [r.n.at, r.t.client, r.t.title, r.n.t != null ? fmtTC(r.n.t) : "", r.n.text, CATS[r.n.cat] || "Other", { client: "Client", team: "Team", self: "Me" }[r.n.src], isMis(r.n) ? "Yes" : "No", r.n.fixed ? "Yes" : "No"])], APP_NAME + "-notes.csv"));
-  $("#sAdd").addEventListener("click", () => {
-    const pool = all().filter((t) => (!sh.client || t.client === sh.client)).sort((a, b) => String(b.assigned || b.createdAt).localeCompare(String(a.assigned || a.createdAt)));
-    const t = pool[0]; if (!t) { toast("Add a task first."); return; }
-    const n = { id: uid(), text: "", cat: "other", src: "client", t: null, at: today(), mistake: false, fixed: false };
-    const nt = JSON.parse(JSON.stringify(t)); nt.mistakes = [...(nt.mistakes || []), n]; sh.q = ""; sh.month = ""; sh.only = "";
-    DB.save(clean(nt)); setTimeout(() => { const el = document.getElementById(`c-${n.id}-text`); if (el) { el.focus(); el.closest("tr").classList.add("new"); } }, 20);
-    toast("Row added to “" + (t.title || "Untitled") + "”. Change the task in the row if needed.");
+  const q = sh.q.trim().toLowerCase(), byClient = new Map();
+  all().forEach((t) => { const c = t.client || "No client"; (byClient.get(c) || byClient.set(c, []).get(c)).push(t); });
+  const keep = (n) => (!sh.only || (sh.only === "open" ? !n.fixed : n.fixed)) && (!q || [n.text, CATS[n.cat]].join(" ").toLowerCase().includes(q));
+  const taskMatch = (t) => !q || [t.title, t.client, ...(t.subtasks || []).map((x) => x.title)].join(" ").toLowerCase().includes(q);
+  const isOpen = (k) => sh.open.has(k) || !!q;            // searching opens everything that matches
+  const count = (notes) => `<span class="gcnt">${notes.length} note${notes.length === 1 ? "" : "s"}${notes.length ? (notes.some((n) => !n.fixed) ? ` · <b>${notes.filter((n) => !n.fixed).length}</b> not done` : ` · <span class="ontime">all done ✓</span>`) : ""}</span>`;
+  const row = (t, n) => `<tr class="nrow" data-t="${esc(t.id)}" data-n="${esc(n.id)}">
+      <td><input id="c-${n.id}-t" data-f="t" value="${n.t != null ? fmtTC(n.t) : ""}" placeholder="0:00" aria-label="Time in the video" class="mono"></td>
+      <td><input id="c-${n.id}-text" data-f="text" value="${esc(n.text)}" maxlength="300" placeholder="Write the client's note" aria-label="Client note"></td>
+      <td><select id="c-${n.id}-cat" data-f="cat" aria-label="Category">${Object.entries(CATS).map(([k, l]) => `<option value="${k}" ${k === n.cat ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></td>
+      <td class="ck"><input type="checkbox" id="c-${n.id}-fixed" data-f="fixed" ${n.fixed ? "checked" : ""} aria-label="Done"></td>
+      <td><button class="x" data-sdel type="button" aria-label="Delete this note">✕</button></td></tr>`;
+  const addRow = (t, subId, lvl) => `<tr class="addrow"><td colspan="5" style="padding-left:${lvl * 22 + 10}px"><button class="linkbtn" data-sadd="${esc(t.id)}" data-sub="${esc(subId)}" type="button">+ Add note</button></td></tr>`;
+  const head = (key, lvl, label, extra, notes) => `<tr class="grp g${lvl}"><td colspan="5" style="padding-left:${lvl * 22 + 6}px"><button class="gbtn2" data-g="${esc(key)}" aria-expanded="${isOpen(key)}" type="button"><span class="car" aria-hidden="true">▸</span>${label}${extra || ""}${count(notes)}</button></td></tr>`;
+  let body = "", shown = 0;
+  [...byClient.entries()].sort((a, b) => a[0].localeCompare(b[0])).forEach(([c, ts]) => {
+    const tlist = ts.filter((t) => taskMatch(t) || (t.mistakes || []).some(keep)).sort((a, b) => String(b.assigned || b.createdAt).localeCompare(String(a.assigned || a.createdAt)));
+    if (!tlist.length) return; shown++;
+    const ck = "c:" + c, cNotes = tlist.flatMap((t) => (t.mistakes || []).filter(keep));
+    body += head(ck, 0, `<b>${esc(c)}</b>`, ` <span class="faint">· ${tlist.length} task${tlist.length === 1 ? "" : "s"}</span>`, cNotes);
+    if (!isOpen(ck)) return;
+    tlist.forEach((t) => {
+      const tk = "t:" + t.id, notes = (t.mistakes || []).filter(keep), subs = t.subtasks || [];
+      body += head(tk, 1, esc(t.title || "Untitled"), `${subs.length ? ` <span class="faint">· ${subs.length} subtask${subs.length === 1 ? "" : "s"}</span>` : ""}${t.delivered ? ` <span class="faint">· delivered ${esc(fmtDate(t.delivered))}</span>` : ""}`, notes);
+      if (!isOpen(tk)) return;
+      notes.filter((n) => !n.sub).forEach((n) => (body += row(t, n)));
+      body += addRow(t, "", 2);
+      subs.forEach((x) => {
+        const sk = "s:" + t.id + ":" + x.id, sn = notes.filter((n) => n.sub === x.id);
+        body += head(sk, 2, `${x.done ? "✓ " : ""}${esc(x.title || "Subtask")}`, "", sn);
+        if (!isOpen(sk)) return;
+        sn.forEach((n) => (body += row(t, n))); body += addRow(t, x.id, 3);
+      });
+    });
   });
+  const allNotes = all().flatMap((t) => t.mistakes || []);
+  m.innerHTML = `<div class="bar"><h1>Notes sheet</h1>
+      <input type="search" id="sq" placeholder="Search clients, tasks or notes" value="${esc(sh.q)}" aria-label="Search notes" style="min-width:min(240px,100%)">
+      <select id="sOnly" aria-label="Show"><option value="">All notes</option><option value="open" ${sh.only === "open" ? "selected" : ""}>Not done yet</option><option value="done" ${sh.only === "done" ? "selected" : ""}>Done</option></select>
+      <button class="btn" id="sExp" type="button">Open all</button><button class="btn" id="sCol" type="button">Close all</button><button class="btn" id="sCsv" type="button">Export CSV</button></div>
+    <div class="sheet-sum"><span><b>${allNotes.length}</b> notes</span><span><b class="bad">${allNotes.filter((n) => !n.fixed).length}</b> not done</span><span><b class="ontime">${allNotes.filter((n) => n.fixed).length}</b> done</span><span class="faint">Open a client to see its tasks, then a task to see its notes and subtasks. Click any cell to change it.</span></div>
+    ${shown ? `<div class="tablewrap"><table class="sheet tree"><colgroup><col style="width:84px"><col><col style="width:170px"><col style="width:80px"><col style="width:44px"></colgroup>
+      <thead><tr><th>Time</th><th>Client note</th><th>Category</th><th class="ck">Done</th><th><span class="sr">Delete</span></th></tr></thead><tbody>${body}</tbody></table></div>`
+      : `<div class="card empty"><b>${all().length ? "Nothing matches" : "No tasks yet"}</b>${all().length ? "Try another search." : "Add a task first. Its client notes show up here, grouped by client."}</div>`}
+    <p class="how"><b>How it works:</b> every note you add to a task (or to one of its subtasks) shows up here under its client, and so does every revision you add with a note. Tick <b>Done</b> when you've fixed it. Whether a note was your mistake is set inside the task.</p>`;
+  $("#sq").addEventListener("input", (e) => { sh.q = e.target.value; render(); });
+  $("#sOnly").addEventListener("change", (e) => { sh.only = e.target.value; render(); });
+  $("#sExp").addEventListener("click", () => { all().forEach((t) => { sh.open.add("c:" + (t.client || "No client")); sh.open.add("t:" + t.id); (t.subtasks || []).forEach((x) => sh.open.add("s:" + t.id + ":" + x.id)); }); render(); });
+  $("#sCol").addEventListener("click", () => { sh.open.clear(); render(); });
+  $("#sCsv").addEventListener("click", () => downloadCsv([["Client", "Task", "Subtask", "Time", "Client note", "Category", "Done", "My mistake"], ...all().flatMap((t) => (t.mistakes || []).map((n) => [t.client, t.title, ((t.subtasks || []).find((x) => x.id === n.sub) || {}).title || "", n.t != null ? fmtTC(n.t) : "", n.text, CATS[n.cat] || "Other", n.fixed ? "Yes" : "No", isMis(n) ? "Yes" : "No"]))], APP_NAME + "-notes.csv"));
   const tb = $("tbody", m); if (!tb) return;
+  tb.addEventListener("click", (e) => {
+    const g = e.target.closest("[data-g]"); if (g) { const k = g.dataset.g; if (sh.open.has(k)) sh.open.delete(k); else sh.open.add(k); render(); return; }
+    const ad = e.target.closest("[data-sadd]");
+    if (ad) { const t = tasks.get(ad.dataset.sadd); if (!t) return; const n = { id: uid(), text: "", cat: "other", src: "client", t: null, at: today(), mistake: false, fixed: false, sub: ad.dataset.sub || "" };
+      const nt = JSON.parse(JSON.stringify(t)); nt.mistakes = [...(nt.mistakes || []), n]; sh.only = ""; DB.save(clean(nt)); setTimeout(() => document.getElementById(`c-${n.id}-text`)?.focus(), 20); return; }
+    const b = e.target.closest("[data-sdel]"); if (!b) return; const tr = b.closest("tr");
+    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Delete?"; b.classList.add("armed"); setTimeout(() => { if (b.isConnected) { b.dataset.armed = ""; b.textContent = "✕"; b.classList.remove("armed"); } }, 3000); return; }
+    const t = tasks.get(tr.dataset.t); if (!t) return; const nt = JSON.parse(JSON.stringify(t)); nt.mistakes = (nt.mistakes || []).filter((x) => x.id !== tr.dataset.n); DB.save(clean(nt)); toast("Note deleted");
+  });
   tb.addEventListener("change", (e) => {
     const f = e.target.dataset.f, tr = e.target.closest("tr"); if (!f || !tr) return;
     const t = tasks.get(tr.dataset.t); if (!t) return;
     const nt = JSON.parse(JSON.stringify(t)), n = (nt.mistakes || []).find((x) => x.id === tr.dataset.n); if (!n) return;
     const v = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    if (f === "client") { nt.client = String(v).trim(); DB.save(clean(nt), true); toast("Client changed for the whole task"); return; }
-    if (f === "task") {                                   // move the note to another task
-      const to = tasks.get(v); if (!to || to.id === t.id) return;
-      nt.mistakes = nt.mistakes.filter((x) => x.id !== n.id); const nt2 = JSON.parse(JSON.stringify(to)); nt2.mistakes = [...(nt2.mistakes || []), n];
-      DB.save(clean(nt)); DB.save(clean(nt2), true); toast("Moved to “" + (to.title || "Untitled") + "”"); return;
-    }
     if (f === "t") { const tc = parseTC(v); if (String(v).trim() && tc == null) { toast("Write the time like 1:05"); e.target.value = n.t != null ? fmtTC(n.t) : ""; return; } n.t = tc; }
-    else if (f === "text") { n.text = String(v).trim().slice(0, 300); }
+    else if (f === "text") n.text = String(v).trim().slice(0, 300);
     else n[f] = v;
     DB.save(clean(nt), true);
-  });
-  tb.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-sdel]"); if (!b) return; const tr = b.closest("tr");
-    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Delete?"; b.classList.add("armed"); setTimeout(() => { if (b.isConnected) { b.dataset.armed = ""; b.textContent = "✕"; b.classList.remove("armed"); } }, 3000); return; }
-    const t = tasks.get(tr.dataset.t); if (!t) return; const nt = JSON.parse(JSON.stringify(t)); nt.mistakes = (nt.mistakes || []).filter((x) => x.id !== tr.dataset.n); DB.save(clean(nt)); toast("Row deleted");
   });
 }
 
@@ -684,8 +701,8 @@ function renderClients(m) {
 let draft = null;
 function openTask(id) {
   const t = id ? tasks.get(id) : null;
-  draft = JSON.parse(JSON.stringify(t || { id: uid(), title: "", client: "", type: "Reel", videos: 1, assigned: today(), due: "", delivered: "", status: "progress", link: "", notes: "", revs: [], mistakes: [], createdAt: new Date().toISOString() }));
-  draft._new = !t; drawTask(); $("#taskM").hidden = false; setTimeout(() => $("#tTitle").focus(), 30);
+  draft = JSON.parse(JSON.stringify(t || { id: uid(), title: "", client: "", type: "Reel", videos: 1, assigned: today(), due: "", delivered: "", status: "progress", link: "", notes: "", subtasks: [], revs: [], mistakes: [], createdAt: new Date().toISOString() }));
+  draft.subtasks = draft.subtasks || []; draft._new = !t; drawTask(); $("#taskM").hidden = false; setTimeout(() => $("#tTitle").focus(), 30);
 }
 function closeTask() { $("#taskM").hidden = true; draft = null; }
 function drawTask() {
@@ -704,6 +721,11 @@ function drawTask() {
       <label class="f">Link (optional)<input id="tLink" value="${esc(t.link)}" inputmode="url" placeholder="Drive, YouTube…"></label>
       <label class="f full">Notes<textarea id="tNotes" maxlength="2000" placeholder="Brief, feedback, anything to remember">${esc(t.notes)}</textarea></label>
     </div>
+    <section class="logsec"><h3>Subtasks <span class="cnt">${t.subtasks.length}</span></h3>
+      <p class="faint" style="margin:-4px 0 0;font-size:12.5px">Split a task into parts, e.g. Reel 1, Reel 2, Reel 3. Client notes can then go on each part.</p>
+      <form class="qadd" id="subForm"><input id="subName" placeholder="Subtask name, e.g. Reel 1" maxlength="120" style="flex:1;min-width:180px;min-height:32px" aria-label="New subtask"><button class="btn sm" type="submit">+ Add subtask</button></form>
+      ${t.subtasks.length ? `<div class="loglist">${t.subtasks.map((x) => `<div class="li sub"><label class="tick"><input type="checkbox" data-subdone="${esc(x.id)}" ${x.done ? "checked" : ""}> Done</label><input class="subname" data-subname="${esc(x.id)}" value="${esc(x.title)}" maxlength="120" aria-label="Subtask name"><button class="x" data-subdel="${esc(x.id)}" type="button" aria-label="Remove this subtask">✕</button></div>`).join("")}</div>` : ""}
+    </section>
     <section class="logsec"><h3>Revisions <span class="cnt">${t.revs.length}</span></h3>
       <div class="qadd"><button class="btn sm" data-rev="client" type="button">+ Client revision</button><button class="btn sm" data-rev="internal" type="button">+ Internal revision</button><input id="revNote" placeholder="What was asked? (optional)" maxlength="300" style="flex:1;min-width:180px;min-height:32px"></div>
       ${t.revs.length ? `<div class="loglist">${t.revs.map((r) => `<div class="li"><span class="tg ${r.kind}">${r.kind === "client" ? "Client" : "Internal"}</span><span>${esc(r.note) || '<span class="faint">No note</span>'} <span class="faint" style="font-size:12px">· ${esc(fmtDate(r.at))}</span></span><button class="x" data-delrev="${esc(r.id)}" type="button" aria-label="Remove this revision">✕</button></div>`).join("")}</div>` : ""}
@@ -714,9 +736,10 @@ function drawTask() {
         <select id="mCat" aria-label="Category">${Object.entries(CATS).map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join("")}</select>
         <input id="mTime" placeholder="Time 0:12" aria-label="Time in the video" inputmode="numeric">
         <select id="mSrc" aria-label="Who found it"><option value="client">By client</option><option value="team">By team</option><option value="self">By me</option></select>
+        ${t.subtasks.length ? `<select id="mSub" aria-label="Which subtask"><option value="">Whole task</option>${t.subtasks.map((x) => `<option value="${esc(x.id)}">${esc(x.title || "Subtask")}</option>`).join("")}</select>` : ""}
         <label class="tick"><input type="checkbox" id="mMis"> My mistake</label>
         <button class="btn sm acc" type="submit">Add</button></form>
-      ${t.mistakes.length ? `<div class="loglist">${t.mistakes.map((x) => `<div class="li"><span class="mono" style="font-size:12px;color:var(--acc)">${x.t != null ? fmtTC(x.t) : "—"}</span><span><b style="font-weight:600">${esc(x.text)}</b> <span class="faint" style="font-size:12px">· ${esc(CATS[x.cat] || "Other")} · </span><span class="tg ${x.src}">${x.src === "client" ? "Client" : x.src === "team" ? "Team" : "Me"}</span>
+      ${t.mistakes.length ? `<div class="loglist">${t.mistakes.map((x) => `<div class="li"><span class="mono" style="font-size:12px;color:var(--acc)">${x.t != null ? fmtTC(x.t) : "—"}</span><span><b style="font-weight:600">${esc(x.text)}</b> <span class="faint" style="font-size:12px">· ${esc(CATS[x.cat] || "Other")} · </span><span class="tg ${x.src}">${x.src === "client" ? "Client" : x.src === "team" ? "Team" : "Me"}</span>${x.sub ? ` <span class="tg sub">${esc((t.subtasks.find((y) => y.id === x.sub) || {}).title || "")}</span>` : ""}
         <span class="liticks"><label class="tick"><input type="checkbox" data-nmis="${esc(x.id)}" ${isMis(x) ? "checked" : ""}> Mistake</label><label class="tick"><input type="checkbox" data-nfix="${esc(x.id)}" ${x.fixed ? "checked" : ""}> Fixed</label></span></span><button class="x" data-delmis="${esc(x.id)}" type="button" aria-label="Remove this note">✕</button></div>`).join("")}</div>` : ""}
     </section>
     <div class="mfoot">${t._new ? "" : `<button class="btn ghost danger left" data-del type="button">Delete task</button>`}<button class="btn ghost" data-close type="button">Cancel</button><button class="btn acc" data-save type="button">${t._new ? "Add task" : "Save"}</button></div>`;
@@ -724,6 +747,7 @@ function drawTask() {
 function readForm() {
   const t = draft; if (!t) return;
   t.title = $("#tTitle").value.trim(); t.client = $("#tClient").value.trim(); t.type = $("#tType").value; t.assigned = $("#tAssigned").value; t.due = $("#tDue").value;
+  $$("[data-subname]").forEach((i) => { const x = t.subtasks.find((y) => y.id === i.dataset.subname); if (x && i.value.trim()) x.title = i.value.trim(); });
   t.delivered = $("#tDelivered").value; t.status = $("#tStatus").value; t.videos = Math.max(1, Math.min(99, Math.round(Number($("#tVideos").value) || 1))); t.link = $("#tLink").value.trim(); t.notes = $("#tNotes").value;
 }
 $("#taskBox").addEventListener("click", (e) => {
@@ -735,6 +759,7 @@ $("#taskBox").addEventListener("click", (e) => {
     if (rv.dataset.rev === "client" && ["delivered", "approved"].includes(draft.status)) draft.status = "revision";
     drawTask(); toast(rv.dataset.rev === "client" ? "Client revision added" : "Internal revision added"); return; }
   const dr = e.target.closest("[data-delrev]"); if (dr) { readForm(); draft.revs = draft.revs.filter((r) => r.id !== dr.dataset.delrev); drawTask(); return; }
+  const sdl = e.target.closest("[data-subdel]"); if (sdl) { readForm(); draft.subtasks = draft.subtasks.filter((x) => x.id !== sdl.dataset.subdel); draft.mistakes.forEach((n) => { if (n.sub === sdl.dataset.subdel) n.sub = ""; }); drawTask(); return; }
   const dm = e.target.closest("[data-delmis]"); if (dm) { readForm(); draft.mistakes = draft.mistakes.filter((r) => r.id !== dm.dataset.delmis); drawTask(); return; }
   const del = e.target.closest("[data-del]");
   if (del) { if (del.dataset.armed !== "1") { del.dataset.armed = "1"; del.textContent = "Click again to delete"; setTimeout(() => { if (del.isConnected) { del.dataset.armed = ""; del.textContent = "Delete task"; } }, 3000); return; }
@@ -747,15 +772,20 @@ $("#taskBox").addEventListener("click", (e) => {
   }
 });
 $("#taskBox").addEventListener("change", (e) => {
-  const m = e.target.closest("[data-nmis], [data-nfix]"); if (!m || !draft) return; readForm();
+  if (!draft) return;
+  const sd = e.target.closest("[data-subdone]"); if (sd) { readForm(); const x = draft.subtasks.find((y) => y.id === sd.dataset.subdone); if (x) x.done = sd.checked; return; }
+  const sn = e.target.closest("[data-subname]"); if (sn) { const x = draft.subtasks.find((y) => y.id === sn.dataset.subname); if (x) x.title = sn.value.trim() || x.title; return; }
+  const m = e.target.closest("[data-nmis], [data-nfix]"); if (!m) return; readForm();
   const n = draft.mistakes.find((x) => x.id === (m.dataset.nmis || m.dataset.nfix)); if (!n) return;
   if (m.dataset.nmis) n.mistake = m.checked; else n.fixed = m.checked; drawTask();
 });
 $("#taskBox").addEventListener("submit", (e) => {
+  if (e.target.id === "subForm") { e.preventDefault(); readForm(); const n = $("#subName").value.trim(); if (!n) { $("#subName").focus(); return; }
+    draft.subtasks.push({ id: uid(), title: n, done: false }); drawTask(); $("#subName").focus(); return; }
   if (e.target.id !== "misForm") return; e.preventDefault(); readForm();
   const text = $("#mText").value.trim(); if (!text) { $("#mText").focus(); return; }
   const tc = parseTC($("#mTime").value);
-  draft.mistakes.push({ id: uid(), text, cat: $("#mCat").value, src: $("#mSrc").value, t: tc, at: draft.delivered || today(), mistake: $("#mMis").checked, fixed: false });
+  draft.mistakes.push({ id: uid(), text, cat: $("#mCat").value, src: $("#mSrc").value, t: tc, at: draft.delivered || today(), mistake: $("#mMis").checked, fixed: false, sub: $("#mSub") ? $("#mSub").value : "" });
   const keepCat = $("#mCat").value, keepSrc = $("#mSrc").value; drawTask(); $("#mCat").value = keepCat; $("#mSrc").value = keepSrc; $("#mText").focus();
 });
 $("#taskM").addEventListener("click", (e) => { if (e.target.id === "taskM") closeTask(); });
@@ -818,7 +848,7 @@ const TOUR = [
   { el: '#nav [data-v="tasks"]', t: "3. All your tasks", d: "<b>Tasks</b> lists everything you've logged. Search by name, client or mistake, filter by status, and export to a spreadsheet. Late deliveries show in red." },
   { el: '#nav [data-v="dash"]', t: "4. Your rating and progress", d: "The <b>Dashboard</b> gives you a rating out of 5 for each month, tells you if you're getting better than last month, and shows graphs of your mistakes and revisions, plus your most common mistakes." },
   { el: '#nav [data-v="clients"]', t: "5. Your clients", d: "<b>Clients</b> shows which clients ask for the most changes, and how you do with each one." },
-  { el: '#nav [data-v="sheet"]', t: "6. Your notes sheet", d: "<b>Notes sheet</b> is like an Excel sheet of every client note, filled in from your tasks. Tick the ones that were <b>your mistake</b> and the ones you've <b>fixed</b>. Every cell can be edited if something filled in wrong, and you can add rows." },
+  { el: '#nav [data-v="sheet"]', t: "6. Your notes sheet", d: "<b>Notes sheet</b> lists every client note, grouped by client, then task, then subtask. Open a client to see its tasks. Tick <b>Done</b> when you've fixed a note, and click any cell to correct it." },
   { el: "#acctBtn", t: "7. Set your goal", d: "In <b>Account</b>, change your name and pick a goal rating. Your goal shows as a line on the rating graph." },
   { el: "#helpBtn", t: "Need this again?", d: "Click <b>?</b> any time to replay this tour." },
 ];
